@@ -1,0 +1,16 @@
+This is a readme file for the college fantasy football program
+
+The program is designed to automate the process of retrieving player and team stats from espn, analyze, 
+and distribute points accordingly.
+
+Goals of this program:
+--Retrieve player and team stats from espn by web scraping
+--Store stats in a database
+--Track fantasy teams
+--Track fantasy rosters weekly lineup
+--Allocate points weekly
+--Display standings and corresponding stat breakdown
+--Maintain scoring for each stat category
+
+Stretch goals:
+--Track stats real time
