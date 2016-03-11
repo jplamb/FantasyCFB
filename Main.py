@@ -9,42 +9,45 @@ from bs4 import BeautifulSoup
 import requests
 import re
 
-# Finds the tag with a plyaer name
-def findPlayer(tag):
-  return tag.has_attr('name') and tag.has_attr('href') and tag.name == 'a'
+# Get links to all power five conference teams' roster
+# Input --> URL to teams page
+# Output --> list of URLs
+def get_power_five_roster_links(teamsURL):
+	page = requests.get(teamsURL)
+	tree = html.fromstring(page.content)
+	soup = BeautifulSoup(page.text, 'lxml')
+	powerFive = ['ACC','SEC','Big Ten', 'Big 12','Pac-12']
 
-# Grabs stats for each type
-def findPassingStats(tag):
-    passingStat = ['\'c-att\'','yds','avg','td','int','qbr']
-    return  'class' in tag.attrs and(tag['class'] == ['name'] or tag['class'] == ['yds'] or
-                                     tag['class'] == ['c-att'] or tag['class'] == ['avg'] or
-                                     tag['class'] == ['td'] or tag['class'] == ['int'] or
-                                      tag['class'] == ['qbr'] )
+	roster_links = []
 
-# Finds all stat categories on page
-def statCats(tag):
-    return (tag.name == 'div' and tag.has_attr('id') and
-            (tag['id'] == ['gamepackage-passing'] or tag['id'] == ['gamepackage-rushing'] or
-            tag['id'] == ['gamepackage-receiving'] or tag['id'] == ['gamepackage-interceptions'] or
-            tag['id'] == ['gamepackage-kickReturns'] or tag['id'] == ['gamepackage-kicking'] or
-            tag['id'] == ['gamepackage-punting']))
-
-# Get page URL and create Beautiful Soup object...needs to know which URLs to get
-page = requests.get('http://espn.go.com/college-football/boxscore?gameId=400763576')
-tree = html.fromstring(page.content)
-soup = BeautifulSoup(page.text, 'lxml')
-statCatgs = ['gamepackage-passing','gamepackage-rushing','gamepackage-receiving','gamepackage-interceptions','gamepackage-kickReturns','gamepackage-kicking','gamepackage-punting']
-
-for items in statCatgs:
-    statCategories = soup.find(id=items)
-    for cat in statCategories:
-        for child in cat.children:
-            players = child.find_all(findPlayer)
-            for player in players:
-                stats = player.find_parent('tr')
-                for stat in stats.find_all(findPassingStats):
-                    print stat['class']
-                    print stat.get_text()
+	# Find div block containing power five conference, sort out non P5 conferences
+	powerFiveTag = soup.find_all("h4", string=powerFive)
+	for headerOne in powerFiveTag:
+		# Jump up two levels to search block containing team names and URLs
+		parentOne = headerOne.parent
+		parentTwo = parentOne.parent
+		parTwoDes = parentTwo.descendants
+		for tag in parTwoDes:
+			# Filter out links so only roster links remain
+			if "espn.go.com" in unicode(tag):
+				
+				# Grab URL, remove html tags and text
+				link = re.search("(?P<url>http://espn[^\s]+\")", unicode(tag)).group("url").rstrip('\"')
+				
+				# Exclude duplicates
+				if link not in roster_links:
+					roster_links.append(link)
+					
+	return roster_links
+		
+power_five_roster_links = get_power_five_roster_links('http://espn.go.com/college-football/teams')
+for link in power_five_roster_links:
+	print link
+print len(power_five_roster_links)
+	
+	
+	
+	
 
 
 
