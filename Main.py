@@ -69,17 +69,29 @@ def get_team_roster(url):
 	
 print datetime.datetime.now().time()
 power_five_roster_links = get_power_five_roster_links('http://espn.go.com/college-football/teams')
+
+player_names = []
+player_id = []
+player_url = []
+player_attrs = [[],[],[]]
+
 for team in power_five_roster_links:
 	player_list = get_team_roster(team)
+	player_attrs.append(player_list)
+	player_names.append(player_list[0])
+	player_id.append(player_list[1])
+	player_url.append(player_list[2])
+	
 print datetime.datetime.now().time()
+
 #print " ".join(power_five_roster_links[0].rsplit("/",1)[1].split("-"))
-#print player_list[0][0]
-#print player_list[1][0]
-#print player_list[2][0]
-	
-	
 
-
+#count = 1
+#for player in player_names:
+#	for name in player:
+#		print str(count) + " ",
+#		print name
+#		count += 1
 
 
 
