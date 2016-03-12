@@ -5,7 +5,7 @@
 ##    -Determine how to crawl through every game in a week
 
 from lxml import html
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, Tag
 import requests
 import re
 import datetime
@@ -66,23 +66,73 @@ def get_team_roster(url):
 	players = [players_name, players_id, players_url]
 	return players
 
+def get_player_stats(url):
+	page = requests.get(url)
+	tree = html.fromstring(page.content)
+	soup = BeautifulSoup(page.content, 'lxml')
 	
-print datetime.datetime.now().time()
-power_five_roster_links = get_power_five_roster_links('http://espn.go.com/college-football/teams')
+	# Get the grid containing game log...asssumes this is the second grid on the page
+	stathead = soup.find_all("tr", attrs={"class": "stathead"})[1]
+	
+	# Grid header contains information about what stats follow (is player a QB, WR, RB, etc.)
+	stat_catgs = [[]]
+	for stat_catg in stathead.children:
+		# Header also says how many stats are in each category
+		stat_catgs.append([stat_catg.string.lower(), stat_catg['colspan']])
+	# Not sure what's going on here but list adds a null item at the beginning of the list
+	stat_catgs.pop(0)
+	
+	
+	game_log = [[]]
+	# Walks through the game log table by row
+	for sibling in stathead.next_siblings:
+		row_data = []
+		
+		# Skip navigable strings...only interested in tags
+		if sibling.__class__ == Tag and sibling is not None:
+			
+			# Steps through each stat in the row
+			for child in sibling.children:
+				if child.string is not None:
+					row_data.append(child.string.strip())
+					
+		if len(row_data) > 0:
+			game_log.append(row_data)
+	
+	for row in game_log:
+		for stat in row:
+			print stat,
+		print "\n"
+		
+	
+	#for child in stathead.next_sibling.next_sibling.children:
+	#	if child.string:
+	#		print child.string.strip()
+	#print stathead.next_sibling.next_sibling.children
+	
+	#col_catgs = stathead.children
+	#for catgs in stathead:
+	#	print catgs.next_sibling
+	#print stathead
+
+get_player_stats("http://espn.go.com/college-football/player/_/id/530541/brenden-motley")
+	
+#print datetime.datetime.now().time()
+#power_five_roster_links = get_power_five_roster_links('http://espn.go.com/college-football/teams')
 
 player_names = []
 player_id = []
 player_url = []
 player_attrs = [[],[],[]]
 
-for team in power_five_roster_links:
-	player_list = get_team_roster(team)
-	player_attrs.append(player_list)
-	player_names.append(player_list[0])
-	player_id.append(player_list[1])
-	player_url.append(player_list[2])
+#for team in power_five_roster_links:
+#	player_list = get_team_roster(team)
+#	player_attrs.append(player_list)
+#	player_names.append(player_list[0])
+#	player_id.append(player_list[1])
+#	player_url.append(player_list[2])
 	
-print datetime.datetime.now().time()
+#print datetime.datetime.now().time()
 
 #print " ".join(power_five_roster_links[0].rsplit("/",1)[1].split("-"))
 
