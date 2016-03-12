@@ -93,27 +93,64 @@ def get_player_stats(url):
 			
 			# Steps through each stat in the row
 			for child in sibling.children:
-				if child.string is not None:
+				
+				# Standard row
+				if child.string is not None and child.string != "":
 					row_data.append(child.string.strip())
+				# If row is an away game and grabs result
+				else:
+					for tag in child:
+						if tag.string is not None and tag.name == 'a' and tag.string != "":
+							row_data.append(tag.string)
+	
 					
 		if len(row_data) > 0:
 			game_log.append(row_data)
 	
-	for row in game_log:
+	#for row in game_log:
+	#	for stat in row:
+	#		print stat,
+	#	print "\n"
+	
+	# Get number of columns in game log
+	num_of_cols = 0
+	for stat_catg in stat_catgs:
+		num_of_cols += int(stat_catg[1])
+	
+	return cleanse_game_log(game_log, num_of_cols)
+
+# Add zero values to prepr for database storage
+def cleanse_game_log(log, num_of_cols):
+	
+	# Remove None types from log
+	for row in log:
 		for stat in row:
-			print stat,
-		print "\n"
-		
+			if stat == "":
+				row.remove(stat)
 	
-	#for child in stathead.next_sibling.next_sibling.children:
-	#	if child.string:
-	#		print child.string.strip()
-	#print stathead.next_sibling.next_sibling.children
+	# Remove header rows like bowl game headers
+	for row in log:
+		if len(row) <= 1:
+			log.remove(row)
+
+	# Set all values to 0 if player was benched that week
+	for row in log:
+		if len(row) < num_of_cols and len(row) > 1:
+			# Override 'No stats available string'
+			row[3] = 0
+			for stat in range(4, num_of_cols):
+				row.append(0)
+				
+	# Convert all stats to floats
+	for row in range(1,len(log)):
+		for stat in range(4, num_of_cols):
+			log[row][stat] = float(log[row][stat])
 	
-	#col_catgs = stathead.children
-	#for catgs in stathead:
-	#	print catgs.next_sibling
-	#print stathead
+	#for row in log:
+	#	for stat in row:
+	#		print type(stat),
+	#	print "\n"
+	
 
 get_player_stats("http://espn.go.com/college-football/player/_/id/530541/brenden-motley")
 	
