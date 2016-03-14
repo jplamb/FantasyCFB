@@ -7,15 +7,22 @@
 from lxml import html
 from bs4 import BeautifulSoup, Tag
 from getPlayers import get_power_five_roster_links, get_team_roster
-from getPlayerStats import get_player_stats, cleanse_game_log, print_game_log
+from getPlayerStats import *
+from Player import *
 import requests
 import re
 import datetime
+import MySQLdb
+import base64
 
-get_player_stats("http://espn.go.com/college-football/player/_/id/530541/brenden-motley")
+
+#get_player_stats("http://espn.go.com/college-football/player/_/id/530541/brenden-motley")
 	
-print datetime.datetime.now().time()
-power_five_roster_links = get_power_five_roster_links('http://espn.go.com/college-football/teams')
+#print datetime.datetime.now().time()
+#power_five_roster_links = get_power_five_roster_links('http://espn.go.com/college-football/teams')
+
+# test player class and db interface
+test_player = Player("John Lamb", 2, 'www.themanualoverride.com')
 
 player_names = []
 player_id = []
@@ -29,7 +36,7 @@ player_attrs = [[],[],[]]
 #	player_id.append(player_list[1])
 #	player_url.append(player_list[2])
 	
-print datetime.datetime.now().time()
+#print datetime.datetime.now().time()
 
 #print " ".join(power_five_roster_links[0].rsplit("/",1)[1].split("-"))
 
