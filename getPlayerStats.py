@@ -30,21 +30,33 @@ def get_player_stats(url):
 	# Walks through the game log table by row
 	for sibling in stathead.next_siblings:
 		row_data = []
-		
+		header_except = ['DATE', 'OPP', 'RESULT%']
+						
 		# Skip navigable strings...only interested in tags
 		if sibling.__class__ == Tag and sibling is not None:
 			
-			# Steps through each stat in the row
-			for child in sibling.children:
+			# Check if header row and grab title attribute text
+			if sibling['class'][0] == 'colhead':
 				
-				# Standard row
-				if child.string is not None and child.string != "":
-					row_data.append(child.string.strip())
-				# If row is an away game and grabs result
-				else:
-					for tag in child:
-						if tag.string is not None and tag.name == 'a' and tag.string != "":
-							row_data.append(tag.string)
+				for child in sibling.children:
+					
+					# first few tags don't contain attributes...grab tag string instead
+					if child.__class__ == Tag and not child.has_attr('title'):
+						row_data.append(child.string.strip())
+					elif child.string is not None and child.string != "" and child.__class__ == Tag:
+						row_data.append(str(child['title']))
+			else:
+				# Steps through each stat in the row
+				for child in sibling.children:
+				
+					# Standard row
+					if child.string is not None and child.string != "":
+						row_data.append(child.string.strip())
+					# If row is an away game and grabs result
+					else:
+						for tag in child:
+							if tag.string is not None and tag.name == 'a' and tag.string != "":
+								row_data.append(tag.string)
 	
 					
 		if len(row_data) > 0:
@@ -67,6 +79,8 @@ def cleanse_game_log(log, num_of_cols):
 	
 	# Remove None types from log
 	for row in log:
+		if row == "":
+			log.remove(row)
 		for stat in row:
 			if stat == "":
 				row.remove(stat)
@@ -88,7 +102,7 @@ def cleanse_game_log(log, num_of_cols):
 	for row in range(1,len(log)):
 		for stat in range(4, num_of_cols):
 			log[row][stat] = float(log[row][stat])
-	print_game_log(log)
+	return log
 	#for row in log:
 	#	for stat in row:
 	#		print type(stat),

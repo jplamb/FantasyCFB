@@ -16,13 +16,12 @@ import MySQLdb
 import base64
 
 
-#get_player_stats("http://espn.go.com/college-football/player/_/id/530541/brenden-motley")
-	
+print_game_log(get_player_stats("http://espn.go.com/college-football/player/_/id/530541/brenden-motley"))
 #print datetime.datetime.now().time()
 #power_five_roster_links = get_power_five_roster_links('http://espn.go.com/college-football/teams')
 
 # test player class and db interface
-test_player = Player("John Lamb", 2, 'www.themanualoverride.com')
+#test_player = Player("John Lamb", 2, 'www.themanualoverride.com')
 
 player_names = []
 player_id = []
