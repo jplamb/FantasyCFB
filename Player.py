@@ -27,57 +27,68 @@ class Player:
 		self.ID = ID
 		self.url = url
 		
-		table_name = "_".join(name.lower().split(" "))
+		self.table_name = "_".join(name.lower().split(" "))
 		
-		if not self.check_table_exists(table_name):
-			self.create_player_stats_table(table_name)
+		if not self.check_table_exists(self.table_name):
+			self.create_player_stats_table(self.table_name)
 		
 	# Insert or Update rows of gamelog into db
 	def set_stats(self, gamelog):
 		
 		# Make sure the table exists first
 		if not self.check_table_exists(self.table_name):
-			self.create_player_stats_table(self.table_name)
+			self.create_player_stats_table(self.table_name)			
 		
-		# SQL to check if row already exists in db
-		row_check = """select count(1) 
-						from %s 
-						where game_date = '%s' """ 
-			
+		insert_sql_cols = 'insert into %s (' % self.table_name
 		
-		update_sql = """update %s set """ % self.table_name
-		insert_sql = 'insert into %s (' % self.table_name
-		
-		# Generate insert statement columns
+		# Generate insert statement base with columns
 		for colname in gamelog[0]:
-			insert_sql += self.get_corres_col_name(str(colname).replace(" ","_").lower())
-		insert_sql += ') values ('
+			insert_sql_cols += self.get_corres_col_name(str(colname).replace(" ","_").lower()) + ','
+		insert_sql_cols = insert_sql_cols[:-1] + ') values ('
 		
 		self.open_db_connection()
 		
+		# Generate SQL insert/update statements for each row in gamelog
 		# Loop through each row in the gamelog except header row
 		for row in range(1,len(gamelog)):
 			
-			# Check if row is in db
+			# SQL to check if row already exists in db
+			row_check = """select count(1) 
+						from %s 
+						where game_date = '%s' """ 
+			
+			# Set update/insert base sql strings
+			update_sql = """update %s set """ % self.table_name
+			insert_sql = insert_sql_cols
+			
+			# Execute row check
 			row_check = row_check % (self.table_name, gamelog[row][0])
 			cursor.execute(row_check)
 			
 			# If already in db, run update
 			if cursor.fetchone()[0]:
-				for count, stat in enumerate(row):
-					update_sql += self.get_corres_col_name(str(gamelog[0][count]).replace(" ","_").lower()) + stat + ','
+				for count, stat in enumerate(gamelog[row]):
+					update_sql += self.get_corres_col_name(str(gamelog[0][count]).replace(" ","_").lower()) + '='
+					
+					# Make sure string type columns take in data as string format
+					if isinstance(stat, basestring):
+						update_sql += "'%s'," % str(stat) 
+					else:
+						update_sql += "%s," % str(stat)
 				update_sql = update_sql[:-1] + "where game_date = '%s'" %gamelog[0][0]
-				print update_sql
-				#cursor.execute(update_sql)
+				cursor.execute(update_sql)
 				
 			# If not, run insert
 			else:
-				for stat in row:
-					insert_sql += stat + ','
+				for stat in gamelog[row]:
+					# Check if state needs to be input as string
+					if isinstance(stat, basestring):
+						insert_sql += "'%s'," % str(stat)
+					else:
+						insert_sql += str(stat) + ','
 				insert_sql = insert_sql[:-1] + ')'
-				print insert_sql
-				#cursor.execute(insert_sql)
-														
+				cursor.execute(insert_sql)
+													
 		self.close_db()
 		
 	def get_corres_col_name(self, stat):
@@ -181,8 +192,9 @@ class Player:
 	
 		cursor = db.cursor()
 	
-	# close db connection to ffbdev
+	# close db connection to ffbdev and commit
 	def close_db(self):
+		db.commit()
 		db.close()
 	
 	# check if table exists

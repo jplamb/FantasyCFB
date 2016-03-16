@@ -103,7 +103,7 @@ def cleanse_game_log(log, num_of_cols):
 				
 	# Convert all stats to floats
 	for row in range(1,len(log)):
-		for stat in range(4, num_of_cols):
+		for stat in range(3, num_of_cols):
 			log[row][stat] = float(log[row][stat])
 	
 	for row in range(1,len(log)):
