@@ -126,7 +126,22 @@ class Player:
 					'longest_fgm': 'fg_long',
 					'extra_points_made': 'xp_made',
 					'extra_points_attempted': 'xp_att',
-					'total_kicking_points': 'kick_points' }
+					'total_kicking_points': 'kick_points', 
+					'total_tackles': 'def_tot_tack',
+					'unassisted_tackles': 'def_unassist_tack',
+					'assisted_tackles': 'def_assist_tack',
+					'sacks': 'def_sacks',
+					'forced_fumbles': 'def_force_fmble',
+					'intercepted_returned_yards': 'def_int_ret_yrds',
+					'avg': 'def_int_ret_avg',
+					'longest_interception_return': 'def_int_ret_long',
+					'interceptions_returned_for_touchdowns': 'def_int_ret_td',
+					'pass_defended': 'def_pass_defend',
+					'total_punts': 'punt_total',
+					'gross_punting_average': 'punt_avg',
+					'longest_punt': 'punt_long',
+					'gross_punting_yards': 'punt_total_yrds'
+					}
 			
 		return stat_dict[stat]
 		
@@ -177,6 +192,20 @@ class Player:
 			xp_made int not null default 0,
 			xp_att int not null default 0,
 			kick_points int not null default 0,
+			def_tot_tack int not null default 0,
+			def_unassist_tack int not null default 0,
+			def_assist_tack int not null default 0,
+			def_sacks float not null default 0,
+			def_force_fmble int not null default 0,
+			def_int_ret_yrds int not null default 0,
+			def_int_avg_yrds int not null default 0,
+			def_int_ret_long int not null default 0,
+			def_int_ret_td int not null default 0,
+			def_pass_defend int not null default 0,
+			punt_total int not null default 0,
+			punt_avg float not null default 0,
+			punt_long int not null default 0,
+			punt_total_yrds int not null default 0,
 			primary key (game_date)
 			)""" % name
 		

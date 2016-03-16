@@ -65,11 +65,6 @@ def get_player_stats(url):
 		if len(row_data) > 0:
 			game_log.append(row_data)
 	
-	#for row in game_log:
-	#	for stat in row:
-	#		print stat,
-	#	print "\n"
-	
 	# Get number of columns in game log
 	num_of_cols = 0
 	for stat_catg in stat_catgs:
