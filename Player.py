@@ -32,99 +32,92 @@ class Player:
 		if not self.check_table_exists(table_name):
 			self.create_player_stats_table(table_name)
 		
-	# set/save stats...needs work
+	# Insert or Update rows of gamelog into db
 	def set_stats(self, gamelog):
-		self.open_db_connection()
 		
-		if not self.check_table_exists(table_name):
-			self.create_player_stats_table(table_name)
+		# Make sure the table exists first
+		if not self.check_table_exists(self.table_name):
+			self.create_player_stats_table(self.table_name)
 		
+		# SQL to check if row already exists in db
 		row_check = """select count(1) 
 						from %s 
 						where game_date = '%s' """ 
+			
 		
-		update_sql = """update %s
-					set 
-					opp = %s,
-					result = %s,
-					completions = %i,
-					pass_att = %i,
-					pass_yards = %i,
-					compl_pct = %f,
-					pass_long = %i,
-					pass_td = %i,
-					int_thrown = %i,
-					pass_rate = %f,
-					raw_qbr = %f,
-					adj_qbr = %f,
-					rush_att = %i,
-					rush_yards = %i,
-					rush_avg = %f,
-					rush_long = %i,
-					rush_td = %i,
-					receptions = %i,
-					rec_yards = %i,
-					rec_avg = %f,
-					rec_long = %i,
-					rec_td = %i,
-					fg_1_19 = %i,
-					fg_20_29 = %i,
-					fg_30_39 = %i,
-					fg_40_49 = %i,
-					fg_50_plus = %i,
-					fg_made = %i,
-					fg_pct = %f,
-					fg_long = %i,
-					xp_made = %i,
-					xp_att = %i,
-					points = %i
-					where game_date = %s"""
-		for row in gamelog:
-			row_check = row_check % (table_name, row[0])
+		update_sql = """update %s set """ % self.table_name
+		insert_sql = 'insert into %s (' % self.table_name
+		
+		# Generate insert statement columns
+		for colname in gamelog[0]:
+			insert_sql += self.get_corres_col_name(str(colname).replace(" ","_").lower())
+		insert_sql += ') values ('
+		
+		self.open_db_connection()
+		
+		# Loop through each row in the gamelog except header row
+		for row in range(1,len(gamelog)):
+			
+			# Check if row is in db
+			row_check = row_check % (self.table_name, gamelog[row][0])
 			cursor.execute(row_check)
 			
+			# If already in db, run update
 			if cursor.fetchone()[0]:
-				update_sql = update_sql
-																		
-		
+				for count, stat in enumerate(row):
+					update_sql += self.get_corres_col_name(str(gamelog[0][count]).replace(" ","_").lower()) + stat + ','
+				update_sql = update_sql[:-1] + "where game_date = '%s'" %gamelog[0][0]
+				print update_sql
+				#cursor.execute(update_sql)
+				
+			# If not, run insert
+			else:
+				for stat in row:
+					insert_sql += stat + ','
+				insert_sql = insert_sql[:-1] + ')'
+				print insert_sql
+				#cursor.execute(insert_sql)
+														
 		self.close_db()
 		
-	def process_weekly_stats(self, header_row, gamelog_row):
+	def get_corres_col_name(self, stat):
 		stat_dict = {
-					'date': 1,
-					'opp': 2,
-					'result': 3,
-					'completions': 4,
-					'pass attempts' = 5,
-					'passing yards' = 6,
-					'completion percentage' = 7,
-					'longest pass play' = 8,
-					'passing touchdowns' = 9,
-					'interceptions thrown' = 10,
-					'passer (qb) rating' = 11,
-					'raw total quaterback rating' = 12,
-					'adjusted total quarterback rating' = 13,
-					'rushing attempts' = 14,
-					'total rushing yards' = 15,
-					'average yards per carry'= 16,
-					'longest run' = 17,
-					'rushing touchdowns' = 18,
-					'total receptions' = 19,
-					'total receiving yards' = 20,
-					'receiving yards per game' = 21,
-					'longest reception' = 22,
-					'receiving touchdowns' = 23,
-					'fgm 1-19 yards' = 24,
-					'fgm 20-29 yards' = 25,
-					'fgm 30-39 yards' = 26,
-					'fgm 40-49 yards' = 27,
-					'fgm 50+ yards' = 28,
-					'field goals made' = 29,
-					'percentage of field goals made' = 30,
-					'longest fgm' = 31,
-					'extra points made' = 32,
-					'extra points attempted' = 33,
-					'total kicking points' = 34 )
+					'date': 'game_date',
+					'opp': 'opp',
+					'result': 'result',
+					'completions': 'completions',
+					'pass_attempts': 'pass_att',
+					'passing_yards': 'pass_yards',
+					'completion_percentage': 'compl_pct',
+					'longest_pass_play': 'pass_long',
+					'passing_touchdowns': 'pass_td',
+					'interceptions_thrown': 'int_thrown',
+					'passer_(qb)_rating': 'pass_rate',
+					'raw_total_quarterback_rating': 'raw_qbr',
+					'adjusted_total_quarterback_rating': 'adj_qbr',
+					'rushing_attempts': 'rush_att',
+					'total_rushing_yards': 'rush_yards',
+					'average_yards_per_carry': 'rush_avg',
+					'longest_run': 'rush_long',
+					'rushing_touchdowns': 'rush_td',
+					'total_receptions': 'receptions',
+					'total_receiving yards': 'rec_yards',
+					'receiving_yards_per_game': 'rec_avg',
+					'longest_reception': 'rec_long',
+					'receiving_touchdowns': 'rec_td',
+					'fgm_1-19_yards': 'fg_1_19',
+					'fgm_20-29_yards': 'fg_20_29',
+					'fgm_30-39_yards': 'fg_30_39',
+					'fgm_40-49_yards': 'fg_40_49',
+					'fgm_50+_yards': 'fg_50_plus',
+					'field_goals_made': 'fg_made',
+					'percentage_of_field_goals_made': 'fg_pct',
+					'longest_fgm': 'fg_long',
+					'extra_points_made': 'xp_made',
+					'extra_points_attempted': 'xp_att',
+					'total_kicking_points': 'kick_points' }
+			
+		return stat_dict[stat]
 		
 	# retrieve game log...needs work
 	def get_stats(self):
@@ -139,43 +132,43 @@ class Player:
 		self.open_db_connection()
 		
 		create_string = """create table %s (
-			game_date date not null,
+			game_date varchar(10) not null,
 			opp varchar(20),
 			result varchar(20),
-			completions int,
-			pass_att int,
-			pass_yards int,
-			compl_pct float,
-			pass_long int,
-			pass_td int,
-			int_thrown int,
-			pass_rate float,
-			raw_qbr float,
-			adj_qbr float,
-			rush_att int,
-			rush_yards int,
-			rush_avg float,
-			rush_long int,
-			rush_td int,
-			receptions int,
-			rec_yards int,
-			rec_avg float,
-			rec_long int,
-			rec_td int,
-			fg_1_19 int,
-			fg_20_29 int,
-			fg_30_39 int,
-			fg_40_49 int,
-			fg_50_plus int,
-			fg_made int,
-			fg_pct float,
-			fg_long int,
-			xp_made int,
-			xp_att int,
-			points int
+			completions int not null default 0,
+			pass_att int not null default 0,
+			pass_yards int not null default 0,
+			compl_pct float not null default 0,
+			pass_long int not null default 0,
+			pass_td int not null default 0,
+			int_thrown int not null default 0,
+			pass_rate float not null default 0,
+			raw_qbr float not null default 0,
+			adj_qbr float not null default 0,
+			rush_att int not null default 0,
+			rush_yards int not null default 0,
+			rush_avg float not null default 0,
+			rush_long int not null default 0,
+			rush_td int not null default 0,
+			receptions int not null default 0,
+			rec_yards int not null default 0,
+			rec_avg float not null default 0,
+			rec_long int not null default 0,
+			rec_td int not null default 0,
+			fg_1_19 int not null default 0,
+			fg_20_29 int not null default 0,
+			fg_30_39 int not null default 0,
+			fg_40_49 int not null default 0,
+			fg_50_plus int not null default 0,
+			fg_made int not null default 0,
+			fg_pct float not null default 0,
+			fg_long int not null default 0,
+			xp_made int not null default 0,
+			xp_att int not null default 0,
+			kick_points int not null default 0,
 			primary key (game_date)
 			)""" % name
-
+		
 		cursor.execute(create_string)
 		
 		self.close_db()

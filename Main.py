@@ -23,6 +23,9 @@ print_game_log(get_player_stats("http://espn.go.com/college-football/player/_/id
 # test player class and db interface
 #test_player = Player("John Lamb", 2, 'www.themanualoverride.com')
 
+motley = Player('Brenden Motley', 530541, "http://espn.go.com/college-football/player/_/id/530541/brenden-motley")
+motley.set_stats(get_player_stats("http://espn.go.com/college-football/player/_/id/530541/brenden-motley"))
+				
 player_names = []
 player_id = []
 player_url = []

@@ -6,8 +6,11 @@
 
 from lxml import html
 from bs4 import BeautifulSoup, Tag
+from time import strptime
+import datetime
 import requests
 import re
+
 
 def get_player_stats(url):
 	page = requests.get(url)
@@ -102,6 +105,11 @@ def cleanse_game_log(log, num_of_cols):
 	for row in range(1,len(log)):
 		for stat in range(4, num_of_cols):
 			log[row][stat] = float(log[row][stat])
+	
+	for row in range(1,len(log)):
+		#log[row][0] = strptime(log[row][0], "%m/%d")  
+		log[row][0] += "/" + str(datetime.datetime.now().year)
+
 	return log
 	#for row in log:
 	#	for stat in row:
