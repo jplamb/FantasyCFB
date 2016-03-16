@@ -52,13 +52,19 @@ def get_team_roster(url):
 	players_name = []
 	players_id = []
 	players_url = []
+	player_info = [[],[],[],[]]
 	
 	# For each player, grab their name, ID, and url
 	for player in players_soup:
-		players_name.append(player.string)
-		players_id.append(re.search("id\/([^\s]+)\/",unicode(players_soup[0])).group(1))
-		players_url.append(player['href'])
+		if player is not None and player.string is not None:
+			player_info.append([player.string, re.search("id\/([^\s]+)\/",unicode(players_soup[0])).group(1),player['href']])
+		#players_name.append(player.string)
+		#players_id.append(re.search("id\/([^\s]+)\/",unicode(players_soup[0])).group(1))
+		#players_url.append(player['href'])
 	
 	# Pass back all three lists as one
 	players = [players_name, players_id, players_url]
-	return players
+	
+	player_info[:] = [val for val in player_info if len(val) != 0 and type(val) != None] 
+	return player_info
+	#return players
