@@ -19,15 +19,15 @@ import base64
 #print_game_log(get_player_stats("http://espn.go.com/college-football/player/_/id/530541/brenden-motley"))
 print datetime.datetime.now().time()
 print 'Retrieving rosters...'
-#power_five_roster_links = get_power_five_roster_links('http://espn.go.com/college-football/teams')
+power_five_roster_links = get_power_five_roster_links('http://espn.go.com/college-football/teams')
 
 # test player class and db interface
 #test_player = Player("John Lamb", 2, 'www.themanualoverride.com')
-
-Fitz = Player('Alex Howell', 511180, "http://espn.go.com/college-football/player/_/id/511180/alex-howell")
-Fitz.set_stats(get_player_stats("http://espn.go.com/college-football/player/_/id/511180/alex-howell"))
+#print_game_log(get_player_stats("http://espn.go.com/college-football/player/_/id/511180/alex-howell"))
+#Fitz = Player('Alex Howell', 511180, "http://espn.go.com/college-football/player/_/id/511180/alex-howell")
+#Fitz.set_stats(get_player_stats("http://espn.go.com/college-football/player/_/id/511180/alex-howell"))
 				
-"""
+
 error_log = open('error_log.txt', 'w')
 for team in power_five_roster_links:
 	player_list=[[],[],[]]
@@ -60,7 +60,7 @@ for team in power_five_roster_links:
 				error_log.write('%s has no log \n' % name)
 			
 error_log.close()
-"""
+
 
 print datetime.datetime.now().time()
 

@@ -42,7 +42,6 @@ def get_player_stats(url):
 	# Walks through the game log table by row
 	for sibling in stathead.next_siblings:
 		row_data = []
-		header_except = ['DATE', 'OPP', 'RESULT%']
 						
 		# Skip navigable strings...only interested in tags
 		if sibling.__class__ == Tag and sibling is not None:
@@ -76,9 +75,11 @@ def get_player_stats(url):
 	
 	# Get number of columns in game log
 	num_of_cols = 0
-	for stat_catg in stat_catgs:
-		num_of_cols += int(stat_catg[1])
-	
+	#for stat_catg in stat_catgs:
+		#num_of_cols += int(stat_catg[1])
+	for col in game_log[0]:
+		num_of_cols += 1
+		
 	return cleanse_game_log(game_log, num_of_cols)
 
 # Add zero values to prepr for database storage
@@ -115,10 +116,6 @@ def cleanse_game_log(log, num_of_cols):
 		log[row][0] += "/" + str(datetime.datetime.now().year)
 
 	return log
-	#for row in log:
-	#	for stat in row:
-	#		print type(stat),
-	#	print "\n"
 	
 # Print game log
 def print_game_log(log):

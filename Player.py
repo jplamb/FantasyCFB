@@ -46,10 +46,9 @@ class Player:
 			self.create_player_stats_table(self.table_name)			
 		
 		insert_sql_cols = 'insert into %s (' % self.table_name
-		
+
 		# Generate insert statement base with columns
 		for colname in gamelog[0]:
-			print colname
 			insert_sql_cols += self.get_corres_col_name(str(colname).replace(" ","_").lower()) + ','
 		insert_sql_cols = insert_sql_cols[:-1] + ') values ('
 		
