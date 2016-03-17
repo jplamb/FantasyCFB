@@ -31,6 +31,12 @@ class Player:
 		
 		if not self.check_table_exists(self.table_name):
 			self.create_player_stats_table(self.table_name)
+		else:
+			self.open_db_connection()
+			sql = "drop table %s" % self.table_name
+			cursor.execute(sql)
+			self.create_player_stats_table(self.table_name)
+
 		
 	# Insert or Update rows of gamelog into db
 	def set_stats(self, gamelog):
@@ -43,6 +49,7 @@ class Player:
 		
 		# Generate insert statement base with columns
 		for colname in gamelog[0]:
+			print colname
 			insert_sql_cols += self.get_corres_col_name(str(colname).replace(" ","_").lower()) + ','
 		insert_sql_cols = insert_sql_cols[:-1] + ') values ('
 		
@@ -112,7 +119,7 @@ class Player:
 					'longest_run': 'rush_long',
 					'rushing_touchdowns': 'rush_td',
 					'total_receptions': 'receptions',
-					'total_receiving yards': 'rec_yards',
+					'total_receiving_yards': 'rec_yards',
 					'receiving_yards_per_game': 'rec_avg',
 					'longest_reception': 'rec_long',
 					'receiving_touchdowns': 'rec_td',
@@ -198,7 +205,7 @@ class Player:
 			def_sacks float not null default 0,
 			def_force_fmble int not null default 0,
 			def_int_ret_yrds int not null default 0,
-			def_int_avg_yrds int not null default 0,
+			def_int_ret_avg int not null default 0,
 			def_int_ret_long int not null default 0,
 			def_int_ret_td int not null default 0,
 			def_pass_defend int not null default 0,

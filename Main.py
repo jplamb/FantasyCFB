@@ -19,52 +19,49 @@ import base64
 #print_game_log(get_player_stats("http://espn.go.com/college-football/player/_/id/530541/brenden-motley"))
 print datetime.datetime.now().time()
 print 'Retrieving rosters...'
-power_five_roster_links = get_power_five_roster_links('http://espn.go.com/college-football/teams')
+#power_five_roster_links = get_power_five_roster_links('http://espn.go.com/college-football/teams')
 
 # test player class and db interface
 #test_player = Player("John Lamb", 2, 'www.themanualoverride.com')
 
-#Fitz = Player('Tyler Fitzgerald', 3945589, "http://espn.go.com/college-football/player/_/id/3945589/tyler-fitzgerald")
-#Fitz.set_stats(get_player_stats("http://espn.go.com/college-football/player/_/id/530541/brenden-motley"))
+Fitz = Player('Alex Howell', 511180, "http://espn.go.com/college-football/player/_/id/511180/alex-howell")
+Fitz.set_stats(get_player_stats("http://espn.go.com/college-football/player/_/id/511180/alex-howell"))
 				
-player_names = []
-player_id = []
-player_url = []
-player_attrs = [[],[],[]]
 """
-team = power_five_roster_links[0]
-player_list = get_team_roster(team)
-player = player_list[0]
-print player[0]"""
-
-player_list=[[],[],[]]
+error_log = open('error_log.txt', 'w')
 for team in power_five_roster_links:
+	player_list=[[],[],[]]
 	player_list.append(get_team_roster(team))
-	#for row in player_list:
-	#	player_names.append(row[0])
-	#	player_id.append(row[1])
-	#	player_url.append(row[2])
-	
-	
-for player in player_list:
-	print player[0]
-		#print "name: " + str(player[0])
-		#print "id: " + str(player[1])
-		#print 'url: ' + str(player[2])
-		#player_names.append(player[0])
-		#player_id.append(player[1])
-		#player_url.append(player[2])
-		
+	player_list = filter(None, player_list)
+
+	for player_set in player_list:
+		for player in player_set:
+			name = player[0]
+			name = re.sub('[.-]', '', name)
+			
+			print str(datetime.datetime.now().time()) + ': Creating player - ' + str(name)
+			temp = Player(name,player[1], player[2])
+			print str(datetime.datetime.now().time()) + ':  Getting stats...'
+			
+			try:
+				log = get_player_stats(temp.url)
+			except IndexError:
+				log = []
+				
+				error_log.write('%s had no stats (%s) \n %s' % (name, player[2], IndexError))
+				error_log.write('\n')
+				
+			if log != []:
+				print datetime.datetime.now().time(),':  Saving stats...'
+				temp.set_stats(log)
+				print datetime.datetime.now().time(),':  Success'
+			else:
+				print datetime.datetime.now().time(),':  Fail'
+				error_log.write('%s has no log \n' % name)
+			
+error_log.close()
 """
-for count, player in enumerate(player_names):
-	print str(datetime.datetime.now().time()) + ': Creating player - ' + str(player)
-	temp = Player(player,player_id[count],player_url[count])
-	print str(datetime.datetime.now().time()) + ':  Getting stats...'
-	log = get_player_stats(temp.url)
-	print datetime.datetime.now().time(),':  Saving stats...'
-	temp.set_stats(log)
-	print datetime.datetime.now().time(),':  Success'
-	"""
+
 print datetime.datetime.now().time()
 
 #print " ".join(power_five_roster_links[0].rsplit("/",1)[1].split("-"))

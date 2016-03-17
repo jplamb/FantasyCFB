@@ -18,8 +18,17 @@ def get_player_stats(url):
 	soup = BeautifulSoup(page.content, 'lxml')
 	
 	# Get the grid containing game log...asssumes this is the second grid on the page
-	stathead = soup.find_all("tr", attrs={"class": "stathead"})[1]
+	#grids = soup.find_all("tr", attrs={"class": "stathead"})[1]
+	grids = soup.find_all("tr", attrs={"class": "stathead"})
 	
+	stathead = []
+	for grid in grids:
+		for child in grid.children:
+			if "Game Log" in child.string:
+				stathead = grid
+				break
+	if stathead == []:
+		return stathead
 	# Grid header contains information about what stats follow (is player a QB, WR, RB, etc.)
 	stat_catgs = [[]]
 	for stat_catg in stathead.children:

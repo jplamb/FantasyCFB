@@ -65,6 +65,10 @@ def get_team_roster(url):
 	# Pass back all three lists as one
 	players = [players_name, players_id, players_url]
 	
-	player_info[:] = [val for val in player_info if len(val) != 0 and type(val) != None] 
+	player_info = filter(None, player_info)
+	player_info = [x for x in player_info if x!= None and x != []]
 	return player_info
+	#player_info[:] = [val for val in player_info if len(val) != 0 and type(val) != None] 
+	#return filter(None,player_info)
+	#return [x for x in player_info if x != []]
 	#return players
