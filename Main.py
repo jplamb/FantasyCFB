@@ -37,7 +37,7 @@ for team in power_five_roster_links:
 	for player_set in player_list:
 		for player in player_set:
 			name = player[0]
-			name = re.sub('[.-]', '', name)
+			name = re.sub("[-.']", "", name)
 			
 			print str(datetime.datetime.now().time()) + ': Creating player - ' + str(name)
 			temp = Player(name,player[1], player[2])

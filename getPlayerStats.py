@@ -33,7 +33,8 @@ def get_player_stats(url):
 	stat_catgs = [[]]
 	for stat_catg in stathead.children:
 		# Header also says how many stats are in each category
-		stat_catgs.append([stat_catg.string.lower(), stat_catg['colspan']])
+		if stat_catg.string != None and stat_catg != "":
+			stat_catgs.append([stat_catg.string.lower(), stat_catg['colspan']])
 	# Not sure what's going on here but list adds a null item at the beginning of the list
 	stat_catgs.pop(0)
 	
@@ -72,18 +73,11 @@ def get_player_stats(url):
 					
 		if len(row_data) > 0:
 			game_log.append(row_data)
-	
-	# Get number of columns in game log
-	num_of_cols = 0
-	#for stat_catg in stat_catgs:
-		#num_of_cols += int(stat_catg[1])
-	for col in game_log[0]:
-		num_of_cols += 1
 		
-	return cleanse_game_log(game_log, num_of_cols)
+	return cleanse_game_log(game_log)
 
 # Add zero values to prepr for database storage
-def cleanse_game_log(log, num_of_cols):
+def cleanse_game_log(log):
 	
 	# Remove None types from log
 	for row in log:
@@ -97,6 +91,11 @@ def cleanse_game_log(log, num_of_cols):
 	for row in log:
 		if len(row) <= 1:
 			log.remove(row)
+	
+	# Count number of columns in header row
+	num_of_cols = 0
+	for col in log[0]:
+		num_of_cols += 1
 
 	# Set all values to 0 if player was benched that week
 	for row in log:
@@ -109,7 +108,19 @@ def cleanse_game_log(log, num_of_cols):
 	# Convert all stats to floats
 	for row in range(1,len(log)):
 		for stat in range(3, num_of_cols):
-			log[row][stat] = float(log[row][stat])
+			
+			# Check if stat contains slash, indicates player is a kicker
+			if "/" in str(log[row][stat]):
+				log[row][stat] = float(log[row][stat].replace("/", ""))
+			elif "-" in str(log[row][stat]):
+				log[row][stat] = 0.0
+			else:
+				log[row][stat] = float(log[row][stat])
+	
+	# Remove non ascii character
+	for row in range(1,len(log)):
+		for stat in range(0,3):
+			log[row][stat] = ''.join((c for c in log[row][stat] if 0 < ord(c) < 128))
 	
 	for row in range(1,len(log)):
 		#log[row][0] = strptime(log[row][0], "%m/%d")  
