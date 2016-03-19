@@ -6,12 +6,13 @@
 
 from lxml import html
 from bs4 import BeautifulSoup, Tag
-from time import strptime
 import datetime
 import requests
 import re
 
-
+# Get gamelog for player
+# Inputs: URL string to player's stat page
+# Returns: game log as list of lists
 def get_player_stats(url):
 	page = requests.get(url)
 	tree = html.fromstring(page.content)
@@ -21,14 +22,18 @@ def get_player_stats(url):
 	#grids = soup.find_all("tr", attrs={"class": "stathead"})[1]
 	grids = soup.find_all("tr", attrs={"class": "stathead"})
 	
+	# Find game log grid from tags that match above criteria
 	stathead = []
 	for grid in grids:
 		for child in grid.children:
 			if "Game Log" in child.string:
 				stathead = grid
 				break
+				
+	# Exit if no game log is found
 	if stathead == []:
 		return stathead
+	
 	# Grid header contains information about what stats follow (is player a QB, WR, RB, etc.)
 	stat_catgs = [[]]
 	for stat_catg in stathead.children:
@@ -70,13 +75,15 @@ def get_player_stats(url):
 							if tag.string is not None and tag.name == 'a' and tag.string != "":
 								row_data.append(tag.string)
 	
-					
+		# If row has data, add
 		if len(row_data) > 0:
 			game_log.append(row_data)
 		
 	return cleanse_game_log(game_log)
 
 # Add zero values to prepr for database storage
+# Inputs: game log as list of lists
+# Returns: game log as list of lists
 def cleanse_game_log(log):
 	
 	# Remove None types from log
@@ -87,7 +94,7 @@ def cleanse_game_log(log):
 			if stat == "":
 				row.remove(stat)
 	
-	# Remove header rows like bowl game headers
+	# Remove informational rows like bowl game headers
 	for row in log:
 		if len(row) <= 1:
 			log.remove(row)
@@ -97,7 +104,7 @@ def cleanse_game_log(log):
 	for col in log[0]:
 		num_of_cols += 1
 
-	# Set all values to 0 if player was benched that week
+	# Set all values to 0 if player has no data for that week
 	for row in log:
 		if len(row) < num_of_cols and len(row) > 1:
 			# Override 'No stats available string'
@@ -112,6 +119,7 @@ def cleanse_game_log(log):
 			# Check if stat contains slash, indicates player is a kicker
 			if "/" in str(log[row][stat]):
 				log[row][stat] = float(log[row][stat].replace("/", ""))
+			# Remove dashes in stat and set to zero
 			elif "-" in str(log[row][stat]):
 				log[row][stat] = 0.0
 			else:
@@ -122,13 +130,15 @@ def cleanse_game_log(log):
 		for stat in range(0,3):
 			log[row][stat] = ''.join((c for c in log[row][stat] if 0 < ord(c) < 128))
 	
+	# Add year to game date
 	for row in range(1,len(log)):
-		#log[row][0] = strptime(log[row][0], "%m/%d")  
 		log[row][0] += "/" + str(datetime.datetime.now().year)
 
 	return log
 	
 # Print game log
+# Inputs: game log
+# Returns
 def print_game_log(log):
 	for row in log:
 		for stat in row:

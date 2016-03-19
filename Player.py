@@ -1,17 +1,8 @@
-# Outline for saving player data
-
-# Table structure
-#  table for each player
-# Should table have columns unique to player position or contain all possible columns?
-#  Original excel sheets was agnostic of player position
-
-# So a player table should include the following columns:
-#  Date  |  Opponent  |  Result  |  Completions  |  Pass Att  |  Pas  Yards  |  Completion %  |  Longest Pass Play
-#  Passing TDs  |  Interceptions Thrown  |  Passer Rating  |  Raw QBR  |  Adj QBR
-#  Rushing Att  |  Rush Yards  |  Rush Avg  |  Rush Long  |  Rush TD 
-#  Receptions  |  Rec Yards  | Rec Avg  |  Rec long  |  Rec TD
-#  FG 1-19  |  FG 20-29  |  FG 30-39  |  FG 40-49  |  FG 50+  |  FG Made  |  FG %  |  FG Long
-#  Extra Points Made  |  XP Att  |  Points
+#####################################################
+#  Player class handles data saving for each player
+#  Interfaces with mysql db
+#  Created by John Lamb
+#####################################################
 
 import MySQLdb
 import base64
@@ -19,7 +10,7 @@ import base64
 # Player class interfaces with database to retrieve and store data
 class Player:
 	
-	table_name = ""
+	#table_name = ""
 	
 	# init...creates player's stats table if none exists
 	def __init__(self, name, ID, url):
@@ -29,22 +20,28 @@ class Player:
 		
 		self.table_name = "_".join(name.lower().split(" "))
 		
+		# Create data table if it doesn't exist
 		if not self.check_table_exists(self.table_name):
 			self.create_player_stats_table(self.table_name)
+		# For testing purposes
+		"""
 		else:
 			self.open_db_connection()
 			sql = "drop table %s" % self.table_name
 			cursor.execute(sql)
 			self.create_player_stats_table(self.table_name)
-
+		"""
 		
 	# Insert or Update rows of gamelog into db
+	# Input: player's gamelog
+	# Returns: 
 	def set_stats(self, gamelog):
 		
 		# Make sure the table exists first
 		if not self.check_table_exists(self.table_name):
 			self.create_player_stats_table(self.table_name)			
 		
+		# Base string for insert statement
 		insert_sql_cols = 'insert into %s (' % self.table_name
 
 		# Generate insert statement base with columns
@@ -97,6 +94,9 @@ class Player:
 													
 		self.close_db()
 		
+	# Maps html stat name with db column name
+	# Input: html stat column as string
+	# Returns: db column as string
 	def get_corres_col_name(self, stat):
 		stat_dict = {
 					'date': 'game_date',
@@ -160,6 +160,8 @@ class Player:
 		return null
 	
 	# create player's stats table
+	# Input: player table name
+	# Returns:
 	def create_player_stats_table(self, name):
 		self.open_db_connection()
 		
@@ -233,6 +235,8 @@ class Player:
 		db.close()
 	
 	# check if table exists
+	# Inputs: player table name
+	# Returns boolean if table exists
 	def check_table_exists(self, name):
 		self.open_db_connection()
 		

@@ -10,6 +10,8 @@ import requests
 import re
 
 # Retrieve all power five conference teams' rosters
+# Inputs: URL string to page with all college football teams' rosters
+# Returns: string list of every teams' roster url
 def get_power_five_roster_links(teamsURL):
 	page = requests.get(teamsURL)
 	tree = html.fromstring(page.content)
@@ -40,6 +42,8 @@ def get_power_five_roster_links(teamsURL):
 	return roster_links
 
 # Retrieve team roster
+# Inputs: team url as string
+# Returns: players' info as list of lists
 def get_team_roster(url):
 	page = requests.get(url)
 	tree = html.fromstring(page.content)
@@ -65,10 +69,9 @@ def get_team_roster(url):
 	# Pass back all three lists as one
 	players = [players_name, players_id, players_url]
 	
+	# Filter out empty sets
 	player_info = filter(None, player_info)
 	player_info = [x for x in player_info if x!= None and x != []]
+	
 	return player_info
-	#player_info[:] = [val for val in player_info if len(val) != 0 and type(val) != None] 
-	#return filter(None,player_info)
-	#return [x for x in player_info if x != []]
-	#return players
+
