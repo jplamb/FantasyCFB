@@ -6,6 +6,7 @@
 
 import MySQLdb
 import base64
+from dbConn import *
 
 # Player class interfaces with database to retrieve and store data
 class Player:
@@ -21,7 +22,7 @@ class Player:
 		self.table_name = "_".join(name.lower().split(" "))
 		
 		# Create data table if it doesn't exist
-		if not self.check_table_exists(self.table_name):
+		if not check_table_exists(self.table_name):
 			self.create_player_stats_table(self.table_name)
 		# For testing purposes
 		"""
@@ -49,7 +50,7 @@ class Player:
 			insert_sql_cols += self.get_corres_col_name(str(colname).replace(" ","_").lower()) + ','
 		insert_sql_cols = insert_sql_cols[:-1] + ') values ('
 		
-		self.open_db_connection()
+		open_db_connection()
 		
 		# Generate SQL insert/update statements for each row in gamelog
 		# Loop through each row in the gamelog except header row
@@ -92,7 +93,7 @@ class Player:
 				insert_sql = insert_sql[:-1] + ')'
 				cursor.execute(insert_sql)
 													
-		self.close_db()
+		close_db()
 		
 	# Maps html stat name with db column name
 	# Input: html stat column as string
@@ -163,7 +164,7 @@ class Player:
 	# Input: player table name
 	# Returns:
 	def create_player_stats_table(self, name):
-		self.open_db_connection()
+		open_db_connection()
 		
 		create_string = """create table %s (
 			game_date varchar(10) not null,
@@ -219,33 +220,6 @@ class Player:
 		
 		cursor.execute(create_string)
 		
-		self.close_db()
+		close_db()
 	
-	# open db connection to ffbdev
-	def open_db_connection(self):
-		global db
-		global cursor
-		db = MySQLdb.connect('localhost', 'appuser', base64.b64decode('YXBwdXNlcg=='), 'ffbdev')
 	
-		cursor = db.cursor()
-	
-	# close db connection to ffbdev and commit
-	def close_db(self):
-		db.commit()
-		db.close()
-	
-	# check if table exists
-	# Inputs: player table name
-	# Returns boolean if table exists
-	def check_table_exists(self, name):
-		self.open_db_connection()
-		
-		show = 'show tables like \'%s\'' % name
-		result = cursor.execute(show)
-		
-		if result:
-			self.close_db()
-			return True
-		
-		self.close_db()
-		return False
