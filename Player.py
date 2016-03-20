@@ -157,9 +157,24 @@ class Player:
 		return null
 	
 	# retrieve individual stat
-	def get_statistic(self, stat_cat):
-		return null
-	
+	# Input: stat_cat as string, table_name as string, date as string
+	# Return: stat as float
+	def get_statistic(self, stat_cat, table_name, date):
+		
+		open_db_connection()
+		
+		select_sql = """
+				select %s 
+				from %s
+				where game_date = '%s'
+				""" % (stat_cat, table_name, date)
+		
+		result = float(cursor.execute(select_sql))
+		
+		close_db()
+		
+		return result
+			
 	# create player's stats table
 	# Input: player table name
 	# Returns:
