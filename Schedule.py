@@ -4,6 +4,8 @@
 #############################################
 
 from dbConn import *
+from lxml import html
+from bs4 import BeautifulSoup
 
 class Schedule:
 	
@@ -72,4 +74,41 @@ class Schedule:
 	# Retrieve the schedule and insert into db
 	# inputs: roster_urls as list of strings
 	def get_schedule(self, roster_urls):
-		print ""
+		
+		date = []
+		team = []
+		
+		# Loop through all rosters in list
+		for roster in roster_urls:
+			page = requests.get(roster)
+			tree = html.fromstring(page.content)
+			soup = BeautifulSoup(page.text, 'lxml')
+			
+			# Get schedule block
+			schedule_block = soup.find(id="showschedule")
+			
+			# Find rows of schedule table
+			for tag in schedule_block.descendants:
+				table_row = re.search("(odd|even)row team", unicode(tag))
+				# set date
+				date.append(table_row.child.string)
+				
+				# find opponent
+				for child in tag.descendants:
+					if child['class'] == 'team-name':
+						team.append(child.string)
+		
+	# Insert schedule into table
+	# inputs: date as list of strings, opp as list of strings
+	def insert_schedule(self, date, opp):
+		print ""		
+
+		
+		
+		
+		
+		
+		
+		
+		
+		
