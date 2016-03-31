@@ -22,16 +22,18 @@ def close_db():
 # check if table exists
 # Inputs: player table name
 # Returns boolean if table exists
-def check_table_exists( name):
-	self.open_db_connection()
+def check_table_exists(name):
+	open_db_connection()
 		
 	show = 'show tables like \'%s\'' % name
 	result = cursor.execute(show)
 		
 	if result:
-		self.close_db()
+		close_db()
 		return True
 		
-	self.close_db()
+	close_db()
 	return False
-		
+
+def execute_sql(sql):
+	cursor.execute(sql)

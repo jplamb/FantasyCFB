@@ -19,6 +19,7 @@ def get_power_five_roster_links(teamsURL):
 	powerFive = ['ACC','SEC','Big Ten', 'Big 12','Pac-12']
 
 	roster_links = []
+	team_names = []
 
 	# Find div block containing power five conference, sort out non P5 conferences
 	powerFiveTag = soup.find_all("h4", string=powerFive)
@@ -35,11 +36,15 @@ def get_power_five_roster_links(teamsURL):
 				# Grab URL, remove html tags and text
 				link = re.search("(?P<url>http://espn[^\s]+\")", unicode(tag)).group("url").rstrip('\"')
 				link = link[:41] + "roster/" + link[41:]
+				
+				if tag.string is not None and tag.string not in team_names:
+					team_names.append(tag.string)
+					
 				# Exclude duplicates
 				if link not in roster_links:
 					roster_links.append(link)
 					
-	return roster_links
+	return [roster_links, team_names]
 
 # Retrieve team roster
 # Inputs: team url as string

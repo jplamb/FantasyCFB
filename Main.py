@@ -7,14 +7,26 @@
 
 from getPlayers import get_power_five_roster_links, get_team_roster
 from updateStats import update_stats
+from Schedule import *
 import datetime
 
 
 #print_game_log(get_player_stats("http://espn.go.com/college-football/player/_/id/530541/brenden-motley"))
 print datetime.datetime.now().time()
-print 'Retrieving rosters...'
-power_five_roster_links = get_power_five_roster_links('http://espn.go.com/college-football/teams')
-update_stats(power_five_roster_links)
+#print 'Retrieving rosters...'
+[power_five_roster_links, power_five_team_names] = get_power_five_roster_links('http://espn.go.com/college-football/teams')
+#update_stats(power_five_roster_links)
+
+power_five_schedule_links = []
+for count,link in enumerate(power_five_roster_links):
+	power_five_schedule_links.append(link.replace("roster","schedule"))
+	
+
+filter(None,power_five_schedule_links)
+for count,team in enumerate(power_five_team_names):
+	print team, " ", power_five_schedule_links[count]
+	schedule = Schedule(team,power_five_schedule_links[count])
+	schedule.get_schedule(schedule.url)
 
 # test player class and db interface
 #test_player = Player("John Lamb", 2, 'www.themanualoverride.com')
