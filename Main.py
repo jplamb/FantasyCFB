@@ -17,6 +17,10 @@ print datetime.datetime.now().time()
 [power_five_roster_links, power_five_team_names] = get_power_five_roster_links('http://espn.go.com/college-football/teams')
 #update_stats(power_five_roster_links)
 
+
+schedule = Schedule("Virginia Tech", "http://espn.go.com/college-football/team/schedule/_/id/259/virginia-tech-hokies")
+schedule.get_schedule(schedule.url)
+"""
 power_five_schedule_links = []
 for count,link in enumerate(power_five_roster_links):
 	power_five_schedule_links.append(link.replace("roster","schedule"))
@@ -24,10 +28,12 @@ for count,link in enumerate(power_five_roster_links):
 
 filter(None,power_five_schedule_links)
 for count,team in enumerate(power_five_team_names):
-	print team, " ", power_five_schedule_links[count]
+	#print team, " ", power_five_schedule_links[count]
 	schedule = Schedule(team,power_five_schedule_links[count])
+	#print schedule.url
+	#print power_five_schedule_links[count]
 	schedule.get_schedule(schedule.url)
-
+"""
 # test player class and db interface
 #test_player = Player("John Lamb", 2, 'www.themanualoverride.com')
 #print_game_log(get_player_stats("http://espn.go.com/college-football/player/_/id/511180/alex-howell"))
