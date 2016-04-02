@@ -103,7 +103,6 @@ class Schedule:
 				if tag.has_attr('class') and tag is not None:
 					# get game home/away status
 					if 'game-status' in tag['class']:
-						#print tag.string,
 						if tag.string == 'vs':
 							status.append('home')
 						else:
@@ -111,17 +110,15 @@ class Schedule:
 					# get opponent
 					elif 'team-name' in tag['class']:
 						#print tag.string
-						opponent.append(tag.string)
+						opponent.append(tag.contents[0].string)
 						opp_id_raw = tag.contents[0]['href']
 						opp_id.append(opp_id_raw.split('/')[-2])
 					# get game date and game time
 					elif 'evenrow' in tag['class'] or 'oddrow' in tag['class']:
 						#date
-						#print tag.contents[0].string,
 						date.append(tag.contents[0].string)
 						#time
-						#print tag.contents[2].string
-						time.append(tag.contents[2].string)
+						time.append(tag.contents[2].contents[0])
 			# handle tags without class attribute
 			except AttributeError:
 				pass
