@@ -1,16 +1,21 @@
-This is a readme file for the college fantasy football program
+The fantasy football program is intended to be both an avenue to learn and an automation of a laborious process.
 
-The program is designed to automate the process of retrieving player and team stats from espn, analyze, 
-and distribute points accordingly.
+I am using this project to learn more about Python and programming in general. At work I develop solutions 
+for a delivered (COTS) product, Since this application is entirely custom here are many challenges and design
+decisions to make that I don't encounter at work.
 
-Goals of this program:
---Retrieve player and team stats from espn by web scraping
---Store stats in a database
---Track fantasy teams
---Track fantasy rosters weekly lineup
---Allocate points weekly
---Display standings and corresponding stat breakdown
---Maintain scoring for each stat category
+This application will replace my spreadsheet based fantasy football league. Previously I used Excel VBA
+to calculate points and monitor stats for each team. I pulled stats manually. This program will automate
+those tasks.
+
+At a minimum the application will:
+--Retrieve player stats from espn via web scraping
+--Maintain a database of those stats
+--Capture teams
+--Capture weekly lineups
+--Allocate points based on player performance
+--Track (display?) standings 
 
 Stretch goals:
 --Track stats real time
+--Capture or run draft

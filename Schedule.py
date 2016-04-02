@@ -78,7 +78,10 @@ class Schedule:
 	def get_schedule(self, roster):
 		
 		date = []
-		team = []
+		time = []
+		opponent = []
+		opp_id = []
+		status = []
 		
 		# Loop through all rosters in list
 
@@ -95,31 +98,44 @@ class Schedule:
 			#print type(tag)
 			#print tag
 			
+			# iterate through all schedule block tags
 			try:
 				if tag.has_attr('class') and tag is not None:
+					# get game home/away status
 					if 'game-status' in tag['class']:
-						print tag.string,
+						#print tag.string,
+						if tag.string == 'vs':
+							status.append('home')
+						else:
+							status.append('away')
+					# get opponent
 					elif 'team-name' in tag['class']:
-						print tag.string
+						#print tag.string
+						opponent.append(tag.string)
+						opp_id_raw = tag.contents[0]['href']
+						opp_id.append(opp_id_raw.split('/')[-2])
+					# get game date and game time
 					elif 'evenrow' in tag['class'] or 'oddrow' in tag['class']:
-						print tag.contents[0].string,
-						print tag.contents[2].string
+						#date
+						#print tag.contents[0].string,
+						date.append(tag.contents[0].string)
+						#time
+						#print tag.contents[2].string
+						time.append(tag.contents[2].string)
+			# handle tags without class attribute
 			except AttributeError:
 				pass
-			#table_row = re.search("(odd|even)row team\w\W", unicode(tag))
-			# set date
-			#date.append(table_row.child.string)
-			#print table_row.child.string
-			#print table_row
-			#print type(table_row)
-			# find opponent
+		
+		for count, game in enumerate(opponent):
+			print date[count],
+			print " at ",
+			print time[count]
+			print status[count],
+			print opponent[count],
+			print "(", opp_id[count], ")"
+			print ""
 			
-			"""
-			for child in tag.descendants:
-				if child['class'] == 'team-name':
-					team.append(child.string)
-					print child.string
-		"""
+		
 	# Insert schedule into table
 	# inputs: date as list of strings, opp as list of strings
 	def insert_schedule(self, date, opp):
