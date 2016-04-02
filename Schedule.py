@@ -96,14 +96,17 @@ class Schedule:
 			#print tag
 			
 			try:
-				if tag.has_attr('class'):
-					print tag.string
-					print tag.children
+				if tag.has_attr('class') and tag is not None:
+					if 'game-status' in tag['class']:
+						print tag.string,
+					elif 'team-name' in tag['class']:
+						print tag.string
+					elif 'evenrow' in tag['class'] or 'oddrow' in tag['class']:
+						print tag.contents[0].string,
+						print tag.contents[2].string
 			except AttributeError:
-				print tag
+				pass
 			#table_row = re.search("(odd|even)row team\w\W", unicode(tag))
-			if type(tag) == BeautifulSoup and 'class' in tag.attrs and ("oddrow" in tag['class'] or "evenrow" in tag['class']):
-				print tag
 			# set date
 			#date.append(table_row.child.string)
 			#print table_row.child.string
