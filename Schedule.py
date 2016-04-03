@@ -3,6 +3,13 @@
 # Created by John Lamb
 #############################################
 
+# to do
+# --convert team ID to name either as sql table or dictionary (store as ID and convert on retrieval?)
+# --mask db operations in own class
+# --format time correctly for storage
+# --store each schedule row before storing in array
+# --fix date for storage
+
 from dbConn import *
 from lxml import html
 from bs4 import BeautifulSoup
@@ -27,36 +34,15 @@ class Schedule:
 		
 		open_db_connection()
 		
+		
 		create_sql = """
 				create table %s (
 				team varchar(20) not null,
-				week_1_opp varchar(20),
-				week_1_time date,
-				week_2_opp varchar(20),
-				week_2_time date,
-				week_3_opp varchar(20),
-				week_3_time date,
-				week_4_opp varchar(20),
-				week_4_time date,
-				week_5_opp varchar(20),
-				week_5_time date,
-				week_6_opp varchar(20),
-				week_6_time date,
-				week_7_opp varchar(20),
-				week_7_time date,
-				week_8_opp varchar(20),
-				week_8_time date,
-				week_9_opp varchar(20),
-				week_9_time date,
-				week_10_opp varchar(20),
-				week_10_time date,
-				week_11_opp varchar(20),
-				week_11_time date,
-				week_12_opp varchar(20),
-				week_12_time date,
-				week_13_opp varchar(20),
-				week_13_time date,
-				primary key (team) 
+				date date not null,
+				opp varchar(20) not null,
+				time time,
+				status varchar(4)
+				primary key(team, date)
 				)""" % table_name
 		
 		execute_sql(create_sql)
@@ -66,12 +52,12 @@ class Schedule:
 	# Get weekly opponent
 	# inputs: team as string, week as date?
 	def get_opponent(self, team, week):
-		print ""
+		pass 
 	
 	# Get game time
 	# inputs: team as string, week as date?
 	def get_game_time(self, team, week):
-		print ""
+		pass
 	
 	# Retrieve the schedule and insert into db
 	# inputs: roster_urls as list of strings
@@ -124,6 +110,7 @@ class Schedule:
 				pass
 		
 		for count, game in enumerate(opponent):
+			"""
 			print date[count],
 			print " at ",
 			print time[count]
@@ -131,12 +118,51 @@ class Schedule:
 			print opponent[count],
 			print "(", opp_id[count], ")"
 			print ""
+			"""
+			insert_schedule(date[count], opp[count], status[count], time[count])
 			
 		
 	# Insert schedule into table
 	# inputs: date as list of strings, opp as list of strings
-	def insert_schedule(self, date, opp):
-		print ""		
+	def insert_schedule(self, date, opp, status, time):
+		
+		if time == 'TBD':
+			insert_sql = """
+				insert into schedule (
+				team,
+				date,
+				opp,
+				status
+				)
+				values (
+				%s,
+				to_date('%s', 'YYYYMMDD' )
+				%s
+				)
+				""" %(team, date, opp, status)
+		else:
+			insert_sql = """
+				insert into schedule (
+				team,
+				date,
+				opp,
+				time,
+				status
+				)
+				values (
+				%s,
+				to_date('%s', 'YYYYMMDD' )
+				%s,
+				%s
+				)
+				""" %(team, date, opp, time, status)
+			
+		db_execute(insert_sql)
+				
+				
+				
+		
+		
 
 		
 		
