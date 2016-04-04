@@ -7,8 +7,7 @@
 # --convert team ID to name either as sql table or dictionary (store as ID and convert on retrieval?)
 # --mask db operations in own class
 # --format time correctly for storage
-# --store each schedule row before storing in array
-# --fix date for storage
+# --add update statements
 
 from dbConn import *
 from lxml import html
@@ -30,25 +29,20 @@ class Schedule:
 
 	# Crete table
 	# inputs: table_name as string
-	def create_table(self, table_name):
-		
-		open_db_connection()
-		
+	def create_table(self, table_name):		
 		
 		create_sql = """
 				create table %s (
 				team varchar(20) not null,
-				date date not null,
+				gm_date date not null,
 				opp varchar(20) not null,
-				time time,
-				status varchar(4)
-				primary key(team, date)
+				gm_time time,
+				status varchar(4),
+				primary key(team, gm_date)
 				)""" % table_name
 		
-		execute_sql(create_sql)
-				
-		close_db()
-	
+		db_execute(create_sql)
+					
 	# Get weekly opponent
 	# inputs: team as string, week as date?
 	def get_opponent(self, team, week):
@@ -104,13 +98,22 @@ class Schedule:
 						#date
 						date.append(tag.contents[0].string)
 						#time
-						time.append(tag.contents[2].contents[0])
+						time.append(tag.contents[2].contents[0].strip())
 			# handle tags without class attribute
 			except AttributeError:
 				pass
 		
+		# Format date for storage
+		for count, dt in enumerate(date):
+			dt = dt.split(',')[1].strip()
+			month = dt[:3]
+			day = dt[4:]
+			seq = (month, day)
+			date[count] = ' '.join(seq)
+			
+		"""
 		for count, game in enumerate(opponent):
-			"""
+			
 			print date[count],
 			print " at ",
 			print time[count]
@@ -119,44 +122,47 @@ class Schedule:
 			print "(", opp_id[count], ")"
 			print ""
 			"""
-			insert_schedule(date[count], opp[count], status[count], time[count])
+			self.insert_schedule(date[count], opponent[count], status[count], time[count])
 			
 		
 	# Insert schedule into table
-	# inputs: date as list of strings, opp as list of strings
+	# inputs: date as formatted string, opp as string, status as string, and time as string
 	def insert_schedule(self, date, opp, status, time):
 		
+		# check if time is TBD or not
 		if time == 'TBD':
 			insert_sql = """
 				insert into schedule (
 				team,
-				date,
+				gm_date,
 				opp,
 				status
 				)
 				values (
-				%s,
-				to_date('%s', 'YYYYMMDD' )
-				%s
+				'%s',
+				str_to_date('%s', '%%b %%d' ),
+				'%s',
+				'%s'
 				)
-				""" %(team, date, opp, status)
+				""" %(self.team, date, opp, status)
 		else:
 			insert_sql = """
 				insert into schedule (
 				team,
-				date,
+				gm_date,
 				opp,
-				time,
+				gm_time,
 				status
 				)
 				values (
-				%s,
-				to_date('%s', 'YYYYMMDD' )
-				%s,
-				%s
+				'%s',
+				str_to_date('%s', '%%b %%d' ),
+				'%s',
+				'%s',
+				'%s'
 				)
-				""" %(team, date, opp, time, status)
-			
+				""" %(self.team, date, opp, time, status)
+
 		db_execute(insert_sql)
 				
 				
