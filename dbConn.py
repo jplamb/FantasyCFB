@@ -37,9 +37,14 @@ def check_table_exists(name):
 
 def execute_sql(sql):
 	cursor.execute(sql)
-
+	
 # mask db operations
 def db_execute(sql):
 	open_db_connection()
+	
 	execute_sql(sql)
+	result = cursor.fetchall()
+	
 	close_db()
+	
+	return result

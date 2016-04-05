@@ -7,9 +7,8 @@
 # --convert team ID to name either as sql table or dictionary (store as ID and convert on retrieval?)
 # --mask db operations in own class
 # --format time correctly for storage
-# --add update statements
 
-from dbConn import *
+from dbConn import db_execute, check_table_exists
 from lxml import html
 from bs4 import BeautifulSoup
 import requests
@@ -75,8 +74,6 @@ class Schedule:
 		
 		# Find rows of schedule table
 		for tag in schedule_block.descendants:
-			#print type(tag)
-			#print tag
 			
 			# iterate through all schedule block tags
 			try:
@@ -111,9 +108,9 @@ class Schedule:
 			seq = (month, day)
 			date[count] = ' '.join(seq)
 			
-		"""
+		# Record schedule by row
 		for count, game in enumerate(opponent):
-			
+			"""
 			print date[count],
 			print " at ",
 			print time[count]
@@ -122,8 +119,22 @@ class Schedule:
 			print "(", opp_id[count], ")"
 			print ""
 			"""
-			self.insert_schedule(date[count], opponent[count], status[count], time[count])
-			
+			self.record_schedule(date[count], opponent[count], status[count], time[count])
+	
+	# Handle schedule updates
+	# input date as string, opp as string, status as string, and time as string
+	def record_schedule(self, date, opp, status, time):
+		row_exists_sql = """
+			select (1)
+			from schedule
+			where team = '%s'
+			and gm_date = str_to_date('%s', '%%b %%d' )
+			""" % (self.team, date)
+		
+		if db_execute(row_exists_sql):
+			self.update_schedule(date, opp, status, time)
+		else:
+			self.insert_schedule(date, opp, status, time)
 		
 	# Insert schedule into table
 	# inputs: date as formatted string, opp as string, status as string, and time as string
@@ -164,9 +175,34 @@ class Schedule:
 				""" %(self.team, date, opp, time, status)
 
 		db_execute(insert_sql)
-				
-				
-				
+	
+	# Update schedule row in table
+	# inputs: date as formatted string, opp as string, status as string, and time as string
+	def update_schedule(self, date, opp, status, time):
+		
+		if time == 'TBD':
+			update_sql = """
+				update schedule 
+				set 
+				opp = '%s',
+				status = '%s'
+				where
+				team = '%s' and
+				gm_date = str_to_date('%s', '%%b %%d' )
+				""" % (opp, status, self.team, date)
+		else:
+			update_sql = """
+				update schedule 
+				set 
+				opp = '%s',
+				gm_time = '%s',
+				status = '%s'
+				where
+				team = '%s' and
+				gm_date = str_to_date('%s', '%%b %%d' )
+				""" % (opp, time, status, self.team, date)		
+			
+		db_execute(update_sql)
 		
 		
 
