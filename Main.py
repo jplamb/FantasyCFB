@@ -9,7 +9,7 @@ from getPlayers import get_power_five_roster_links, get_team_roster
 from updateStats import update_stats
 from Schedule import *
 import datetime
-
+from dbConn import db_execute
 
 #print_game_log(get_player_stats("http://espn.go.com/college-football/player/_/id/530541/brenden-motley"))
 print datetime.datetime.now().time()
@@ -17,7 +17,7 @@ print datetime.datetime.now().time()
 [power_five_roster_links, power_five_team_names] = get_power_five_roster_links('http://espn.go.com/college-football/teams')
 #update_stats(power_five_roster_links)
 
-
+	
 schedule = Schedule("Virginia Tech", "http://espn.go.com/college-football/team/schedule/_/id/259/virginia-tech-hokies")
 schedule.get_schedule(schedule.url)
 """

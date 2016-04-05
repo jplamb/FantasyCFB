@@ -5,8 +5,6 @@
 
 # to do
 # --convert team ID to name either as sql table or dictionary (store as ID and convert on retrieval?)
-# --mask db operations in own class
-# --format time correctly for storage
 
 from dbConn import db_execute, check_table_exists
 from lxml import html
@@ -169,7 +167,7 @@ class Schedule:
 				'%s',
 				str_to_date('%s', '%%b %%d' ),
 				'%s',
-				'%s',
+				time_format('%s', '%%h:%%i %%p),
 				'%s'
 				)
 				""" %(self.team, date, opp, time, status)
@@ -195,7 +193,7 @@ class Schedule:
 				update schedule 
 				set 
 				opp = '%s',
-				gm_time = '%s',
+				gm_time = time_format('%s', '%%h:%%i %%p),
 				status = '%s'
 				where
 				team = '%s' and

@@ -21,9 +21,7 @@ class Roster:
 	
 	# create roster table
 	def create_team_roster(self):
-				
-		open_db_connection()
-		
+						
 		create_string = """ create table %s
 				player varchar(20) not null
 				pos varchar(2)
@@ -31,16 +29,12 @@ class Roster:
 				elig varchar(1) not null
 				opp varchar(20)""" % self.table_name
 		
-		cursor.execute(create_string)
-		
-		close_db()
+		db_execute(create_string)
 	
 	# Delete all rows and add players, set elig and start to 'N'
 	# inputs: team players as list (not attribute of class in case called externally
 	def update_roster_players(self, team_players):
-		
-		open_db_connection()
-		
+				
 		truncate_sql = """truncate %s
 					""" % self.table_name
 		
@@ -52,10 +46,8 @@ class Roster:
 				""" 
 		for player in team_players:
 			sql = insert_sql % (self.table_name, player)
-			cursor.execute(sql)
-		
-		close_db()
-	
+			db_execute(sql)
+			
 	# Get schedule details and update opp, then update eligibility
 	def update_opps(self):
 		print ""
@@ -63,9 +55,7 @@ class Roster:
 	# Update player starting status
 	# inputs: Player_starts as 2D list (player, status)
 	def update_starters(self, player_starts):
-		
-		open_db_connection()
-		
+				
 		update_sql = """
 				update %s
 				set status = '%s'
@@ -74,9 +64,8 @@ class Roster:
 		
 		for player in player_starts:
 			sql = update_sql % (self.table_name, player[1], player[2])
-			cursor.execute(sql)
+			db_execute(sql)
 		
-		close_db()
 		
 	
 		
