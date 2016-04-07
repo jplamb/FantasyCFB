@@ -4,7 +4,6 @@
 #############################################
 
 # to do
-# --convert team ID to name either as sql table or dictionary (store as ID and convert on retrieval?)
 
 from dbConn import db_execute, check_table_exists
 from lxml import html
@@ -35,6 +34,7 @@ class Schedule:
 				opp varchar(20) not null,
 				gm_time time,
 				status varchar(4),
+				power_five varchar(1),
 				primary key(team, gm_date)
 				)""" % table_name
 		
@@ -106,6 +106,7 @@ class Schedule:
 			seq = (month, day)
 			date[count] = ' '.join(seq)
 			
+			
 		# Record schedule by row
 		for count, game in enumerate(opponent):
 			"""
@@ -117,11 +118,14 @@ class Schedule:
 			print "(", opp_id[count], ")"
 			print ""
 			"""
-			self.record_schedule(date[count], opponent[count], status[count], time[count])
+			self.record_schedule(date[count], opponent[count], status[count], time[count], opp_id[count])
 	
 	# Handle schedule updates
 	# input date as string, opp as string, status as string, and time as string
-	def record_schedule(self, date, opp, status, time):
+	def record_schedule(self, date, opp, status, time, opp_id):
+		
+		opp_power_five = self.is_opp_power_five(opp_id)
+		
 		row_exists_sql = """
 			select (1)
 			from schedule
@@ -130,13 +134,13 @@ class Schedule:
 			""" % (self.team, date)
 		
 		if db_execute(row_exists_sql):
-			self.update_schedule(date, opp, status, time)
+			self.update_schedule(date, opp, status, time, opp_power_five)
 		else:
-			self.insert_schedule(date, opp, status, time)
+			self.insert_schedule(date, opp, status, time, opp_power_five)
 		
 	# Insert schedule into table
 	# inputs: date as formatted string, opp as string, status as string, and time as string
-	def insert_schedule(self, date, opp, status, time):
+	def insert_schedule(self, date, opp, status, time, opp_power):
 		
 		# check if time is TBD or not
 		if time == 'TBD':
@@ -145,15 +149,17 @@ class Schedule:
 				team,
 				gm_date,
 				opp,
-				status
+				status,
+				power_five
 				)
 				values (
 				'%s',
 				str_to_date('%s', '%%b %%d' ),
 				'%s',
+				'%s',
 				'%s'
 				)
-				""" %(self.team, date, opp, status)
+				""" %(self.team, date, opp, status, opp_power)
 		else:
 			insert_sql = """
 				insert into schedule (
@@ -161,46 +167,66 @@ class Schedule:
 				gm_date,
 				opp,
 				gm_time,
-				status
+				status,
+				power_five
 				)
 				values (
 				'%s',
 				str_to_date('%s', '%%b %%d' ),
 				'%s',
 				time_format('%s', '%%h:%%i %%p),
+				'%s',
 				'%s'
 				)
-				""" %(self.team, date, opp, time, status)
+				""" %(self.team, date, opp, time, status, opp_power)
 
 		db_execute(insert_sql)
 	
 	# Update schedule row in table
 	# inputs: date as formatted string, opp as string, status as string, and time as string
-	def update_schedule(self, date, opp, status, time):
+	def update_schedule(self, date, opp, status, time, opp_power):
 		
 		if time == 'TBD':
 			update_sql = """
 				update schedule 
 				set 
 				opp = '%s',
-				status = '%s'
+				status = '%s',
+				power_five = '%s'
 				where
 				team = '%s' and
 				gm_date = str_to_date('%s', '%%b %%d' )
-				""" % (opp, status, self.team, date)
+				""" % (opp, status, opp_power, self.team, date)
 		else:
 			update_sql = """
 				update schedule 
 				set 
 				opp = '%s',
 				gm_time = time_format('%s', '%%h:%%i %%p),
-				status = '%s'
+				status = '%s',
+				power_five = '%s'
 				where
 				team = '%s' and
 				gm_date = str_to_date('%s', '%%b %%d' )
-				""" % (opp, time, status, self.team, date)		
+				""" % (opp, time, status, opp_power, self.team, date)		
 			
 		db_execute(update_sql)
+		
+	# is team a power five team?
+	# Input team_id as string
+	# returns Y or N 
+	def is_power_five_team(self, team_id):
+		
+		select_sql = """
+				select (1)
+				from teams
+				where team_id = %s
+				""" % (opp_id)
+		
+		if db_execute(select_sql):
+			return 'Y'
+		else:
+			return 'N'
 		
 		
 
