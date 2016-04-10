@@ -78,5 +78,51 @@ def get_team_roster(url):
 	player_info = filter(None, player_info)
 	player_info = [x for x in player_info if x!= None and x != []]
 	
+	team = url.split('/')[-1]
+	
+	for player in player_info:	
+		add_to_player_table(player, team)
+	
 	return player_info
+
+def add_to_player_table(player_info, team):
+		name = player_info[0]
+		id = player_info[1]
+		url = player_info[2]
+		
+		sql = """
+				select (1)
+				from players
+				where player_id = %s
+				""" % (self.id)
+		
+		if db_execute(sql):
+			update_sql = """
+				update players
+				set 
+				name = '%s',
+				url = '%s',
+				team = '%s'
+				where 
+				player_id = %s
+				""" % (name, url, team, id)
+			
+			db_execute(update_sql)
+		
+		else:
+			insert_sql = """
+				insert into players (
+				player_id,
+				name,
+				url,
+				team)
+				values (
+				%s,
+				'%s',
+				'%s',
+				'%s')
+				""" % (id, name, url, team)
+			
+			db_execute(insert_sql)
+				
 

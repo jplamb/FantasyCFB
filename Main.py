@@ -11,7 +11,7 @@ from Schedule import *
 import datetime
 from dbConn import db_execute
 
-def run_console():
+def run_console(actions):
 	print 'Welcome to the Fantasy Football League of Superb Champions II or FFLSCII'
 	print 'Select an action from the list below:'
 	
@@ -48,8 +48,12 @@ def run_test():
 				return test
 			
 def perform_action(command):
-	commands = {1 : 'get_player_roster'
+	commands = {1 : 'con_get_players'
+				2 : 'con_get_player_stats'
+				3 : 'con_update_schedule'
 				}
+	
+	commands[command]()
 				
 def con_get_players():
 	[power_five_roster_links, power_five_team_names] = get_power_five_roster_links('http://espn.go.com/college-football/teams')
@@ -65,7 +69,7 @@ def con_get_players():
 		
 	return players_list
 
-def con_get_player_stats(urls):
+def con_get_player_stats(names, ids, urls):
 	
 	game_logs = []
 	
@@ -73,9 +77,9 @@ def con_get_player_stats(urls):
 		play_game_log = get_player_stats(url)
 		game_logs.append(play_game_log)
 	
-	return game_logs
+	con_save_player_stats(names, ids, urls,game_logs)
 
-def save_player_stats(names, ids, urls, game_logs):
+def con_save_player_stats(names, ids, urls, game_logs):
 	for count,name in enumerate(names):
 		temp_player = Player(name, ids[count], urls[count])
 		temp_player.set_stats(game_logs[count])
@@ -93,12 +97,12 @@ test_get_roster_link = 'http://espn.go.com/college-football/teams'
 test_get_schedule = ['Virginia Tech', "http://espn.go.com/college-football/team/schedule/_/id/259/virginia-tech-hokies"]
 
 action_choice = ['Retrieve players', 
-				 'Store player data'
+				 'Get and store player data'
 				 'Retrieve team schedule]
 print datetime.datetime.now().time()
 
 test_mode = run_test()
-command = run_console()
+command = run_console(action_choice)
 perform_action(command)
 
 

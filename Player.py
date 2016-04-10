@@ -33,6 +33,8 @@ class Player:
 			self.create_player_stats_table(self.table_name)
 		"""
 		
+		self.add_to_player_table()
+		
 	# Insert or Update rows of gamelog into db
 	# Input: player's gamelog
 	# Returns: 
@@ -236,5 +238,8 @@ class Player:
 		cursor.execute(create_string)
 		
 		close_db()
+		
+	
+				
 	
 	
