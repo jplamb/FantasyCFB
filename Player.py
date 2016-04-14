@@ -32,9 +32,7 @@ class Player:
 			cursor.execute(sql)
 			self.create_player_stats_table(self.table_name)
 		"""
-		
-		self.add_to_player_table()
-		
+				
 	# Insert or Update rows of gamelog into db
 	# Input: player's gamelog
 	# Returns: 
