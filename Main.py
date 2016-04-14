@@ -11,6 +11,9 @@ from Schedule import *
 import datetime
 from dbConn import db_execute
 
+# Run console 
+# inputs actions as list of choices (strs)
+# returns selected action as int
 def run_console(actions):
 	print 'Welcome to the Fantasy Football League of Superb Champions II or FFLSCII'
 	print 'Select an action from the list below:'
@@ -18,11 +21,11 @@ def run_console(actions):
 	while True:
 		try:
 			for count, act in enumerate(actions):
-				print count,
+				print count + 1,
 				print ')  ',
 				print act
 
-			print 'Enter a number'
+			print 'You only need to enter a number'
 
 			action  = int(raw_input('Enter an action'))
 		except ValueError:
@@ -34,11 +37,15 @@ def run_console(actions):
 		
 	return action
 
+# Use test data?
 def run_test():
+	test = ''
 	while True:
 		try:
-			test = char(raw_input('Would you like to run in test mode? (y/n)').lower())
+			test = raw_input('Would you like to run in test mode? (y/n)').lower()
 		except ValueError:
+			print 'That\'s not a valid input, try again'
+		except len(test) != 1:
 			print 'That\'s not a valid input, try again'
 		else:
 			if test != 'y' and test != 'n':
@@ -46,15 +53,24 @@ def run_test():
 				run_test()
 			else:
 				return test
-			
+
+# Initiate action
+# inputs command as int
 def perform_action(command):
-	commands = {1 : 'con_get_players'
-				2 : 'con_get_player_stats'
+	commands = {1 : 'con_get_players',
+				2 : 'con_get_player_stats',
 				3 : 'con_update_schedule'
 				}
 	
-	commands[command]()
-				
+	possibles = globals().copy()
+	possibles.update(locals())
+	method = possibles.get(commands[command])
+	if not method:
+		raise NotImplementedError("Method %s does not exist" % commands[command])
+	method()
+
+# Get all rosters and all players on each team	
+# returns list of name (str), id (int), url (str)
 def con_get_players():
 	[power_five_roster_links, power_five_team_names] = get_power_five_roster_links('http://espn.go.com/college-football/teams')
 	
@@ -69,6 +85,8 @@ def con_get_players():
 		
 	return players_list
 
+# Get stats (game log) for players
+# inputs names as list of string, id as list of ints, and url as list of strings
 def con_get_player_stats(names, ids, urls):
 	
 	game_logs = []
@@ -79,16 +97,23 @@ def con_get_player_stats(names, ids, urls):
 	
 	con_save_player_stats(names, ids, urls,game_logs)
 
+# Saves players stats to DB
+# inputs names as list of strings, ids as list of ints, urls as list of strings, and game log as list
 def con_save_player_stats(names, ids, urls, game_logs):
 	for count,name in enumerate(names):
 		temp_player = Player(name, ids[count], urls[count])
 		temp_player.set_stats(game_logs[count])
-		
-def con_update_schedule(teams, schedule_urls):
+
+# Get team schedules and update db
+# inputs teams as list of strings and schedule_urls as list of strings
+def con_update_schedule():
+	[roster_urls, teams] = get_power_five_roster_links('http://espn.go.com/college-football/teams')
+	
 	
 	for count,team in enumerate(teams):
-		temp_team = Schedule(team, team_urls[count])
-		temp_team.get_schedule(team_urls[count])
+		schedule_url = roster_urls[count].replace("roster", "schedule")
+		temp_team = Schedule(team, schedule_url)
+		temp_team.get_schedule(schedule_url)
 	
 
 # Set test data
@@ -96,14 +121,19 @@ test_player_link = "http://espn.go.com/college-football/player/_/id/530541/brend
 test_get_roster_link = 'http://espn.go.com/college-football/teams'
 test_get_schedule = ['Virginia Tech', "http://espn.go.com/college-football/team/schedule/_/id/259/virginia-tech-hokies"]
 
+# list of prompt options
 action_choice = ['Retrieve players', 
-				 'Get and store player data'
-				 'Retrieve team schedule]
+				 'Get and store player data',
+				 'Retrieve team schedule']
 print datetime.datetime.now().time()
 
+# run console
 test_mode = run_test()
 command = run_console(action_choice)
 perform_action(command)
+
+print 'Closing..'
+print datetime.datetime.now().time()
 
 
 # Legacy code
