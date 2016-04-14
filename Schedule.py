@@ -124,7 +124,7 @@ class Schedule:
 	# input date as string, opp as string, status as string, and time as string
 	def record_schedule(self, date, opp, status, time, opp_id):
 		
-		opp_power_five = self.is_opp_power_five(opp_id)
+		opp_power_five = self.is_power_five_team(opp_id)
 		
 		row_exists_sql = """
 			select (1)
@@ -174,12 +174,11 @@ class Schedule:
 				'%s',
 				str_to_date('%s', '%%b %%d' ),
 				'%s',
-				time_format('%s', '%%h:%%i %%p),
+				time_format('%s', '%%h:%%i %%p'),
 				'%s',
 				'%s'
 				)
 				""" %(self.team, date, opp, time, status, opp_power)
-
 		db_execute(insert_sql)
 	
 	# Update schedule row in table
@@ -221,7 +220,7 @@ class Schedule:
 				select (1)
 				from teams
 				where team_id = %s
-				""" % (opp_id)
+				""" % (team_id)
 		
 		if db_execute(select_sql):
 			return 'Y'
