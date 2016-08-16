@@ -73,7 +73,7 @@ def perform_action(command):
 # returns list of name (str), id (int), url (str)
 def con_get_players():
 	[power_five_roster_links, power_five_team_names] = get_power_five_roster_links('http://espn.go.com/college-football/teams')
-	
+	print power_five_roster_links
 	players_list = [ [], [], [] ]
 	for team_url in power_five_roster_links:
 		# [name, id, url]
@@ -87,12 +87,14 @@ def con_get_players():
 
 # Get stats (game log) for players
 # inputs names as list of string, id as list of ints, and url as list of strings
-def con_get_player_stats(names, ids, urls):
-	
+def con_get_player_stats():
+	(names, ids, urls) = con_get_players()
 	game_logs = []
 	
 	for url in urls:
+		#print url
 		play_game_log = get_player_stats(url)
+		#print play_game_log
 		game_logs.append(play_game_log)
 	
 	con_save_player_stats(names, ids, urls,game_logs)

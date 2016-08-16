@@ -19,7 +19,8 @@ class Player:
 		self.ID = ID
 		self.url = url
 		
-		self.table_name = "_".join(name.lower().split(" "))
+		#self.table_name = "_".join(name.lower().split(" "))
+		self.table_name = "player_stats"
 		
 		# Create data table if it doesn't exist
 		if not check_table_exists(self.table_name):
@@ -43,12 +44,12 @@ class Player:
 			self.create_player_stats_table(self.table_name)			
 		
 		# Base string for insert statement
-		insert_sql_cols = 'insert into %s (' % self.table_name
+		insert_sql_cols = 'insert into %s (player_id, player_name,' % self.table_name
 
 		# Generate insert statement base with columns
 		for colname in gamelog[0]:
 			insert_sql_cols += self.get_corres_col_name(str(colname).replace(" ","_").lower()) + ','
-		insert_sql_cols = insert_sql_cols[:-1] + ') values ('
+		insert_sql_cols = insert_sql_cols[:-1] + """) values (%s, '%s',""" %(self.ID, self.name)
 		
 		open_db_connection()
 		
@@ -59,14 +60,15 @@ class Player:
 			# SQL to check if row already exists in db
 			row_check = """select count(1) 
 						from %s 
-						where game_date = '%s' """ 
+						where player_id = %s
+						game_date = '%s' """ 
 			
 			# Set update/insert base sql strings
 			update_sql = """update %s set """ % self.table_name
 			insert_sql = insert_sql_cols
 			
 			# Execute row check
-			row_check = row_check % (self.table_name, gamelog[row][0])
+			row_check = row_check % (self.table_name, self.ID, gamelog[row][0])
 			cursor.execute(row_check)
 			
 			# If already in db, run update
@@ -79,7 +81,7 @@ class Player:
 						update_sql += "'%s'," % str(stat) 
 					else:
 						update_sql += "%s," % str(stat)
-				update_sql = update_sql[:-1] + "where game_date = '%s'" %gamelog[0][0]
+				update_sql = update_sql[:-1] + "where game_date = '%s' and player_id = %s" %(gamelog[0][0], self.ID)
 				cursor.execute(update_sql)
 				
 			# If not, run insert
@@ -167,7 +169,8 @@ class Player:
 				select %s 
 				from %s
 				where game_date = '%s'
-				""" % (stat_cat, table_name, date)
+				and player_id = %s
+				""" % (stat_cat, table_name, date, self.ID)
 		
 		result = float(cursor.execute(select_sql))
 		
@@ -183,6 +186,8 @@ class Player:
 		
 		create_string = """create table %s (
 			game_date varchar(10) not null,
+			player_id int not null,
+			player_name varchar(30),
 			opp varchar(20),
 			result varchar(20),
 			completions int not null default 0,
@@ -230,7 +235,7 @@ class Player:
 			punt_avg float not null default 0,
 			punt_long int not null default 0,
 			punt_total_yrds int not null default 0,
-			primary key (game_date)
+			primary key (game_date, player_id)
 			)""" % name
 		
 		cursor.execute(create_string)

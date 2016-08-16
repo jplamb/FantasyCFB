@@ -24,27 +24,43 @@ def get_power_five_roster_links(teamsURL):
 
 	# Find div block containing power five conference, sort out non P5 conferences
 	powerFiveTag = soup.find_all("h4", string=powerFive)
+
 	for headerOne in powerFiveTag:
 		# Jump up two levels to search block containing team names and URLs
 		parentOne = headerOne.parent
 		parentTwo = parentOne.parent
-		parTwoDes = parentTwo.descendants
-		for tag in parTwoDes:
+		testsoup = BeautifulSoup(str(parentTwo), 'lxml')
+		teams = testsoup.find_all("h5")
+		for team in teams:
 
+			link = team.a['href']
+			ind = team.a['href'].find('team')
+			link = link[:ind+5] + "roster/" + link[ind+5:]
+			team_name = team.a.string
+			
+			if team_name not in team_names:
+				team_names.append(team_name)
+				roster_links.append(link)
+			
+		#parTwoDes = parentTwo.descendants
+		"""for tag in parTwoDes:
+			#print unicode(tag)
 			# Filter out links so only roster links remain
-			if "espn.go.com" in unicode(tag):
-				
+			if tag is not None and "espn.com" in unicode(tag):
+				#print 'break'
+				#print ''
+				#print tag
 				# Grab URL, remove html tags and text
 				link = re.search("(?P<url>http://espn[^\s]+\")", unicode(tag)).group("url").rstrip('\"')
 				link = link[:41] + "roster/" + link[41:]
-				
+				print link
 				if tag.string is not None and tag.string not in team_names:
 					team_names.append(tag.string)
 					
 				# Exclude duplicates
 				if link not in roster_links:
 					roster_links.append(link)
-					
+			"""		
 	return [roster_links, team_names]
 
 # Retrieve team roster
