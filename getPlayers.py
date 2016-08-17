@@ -32,13 +32,13 @@ def get_power_five_roster_links(teamsURL):
 		testsoup = BeautifulSoup(str(parentTwo), 'lxml')
 		teams = testsoup.find_all("h5")
 		for team in teams:
-
 			link = team.a['href']
 			ind = team.a['href'].find('team')
-			link = link[:ind+5] + "roster/" + link[ind+5:]
+			if ind >= 0:
+				link = link[:ind+5] + "roster/" + link[ind+5:]
 			team_name = team.a.string
 			
-			if team_name not in team_names:
+			if team_name not in team_names and len(link) > 0:
 				team_names.append(team_name)
 				roster_links.append(link)
 			
@@ -72,12 +72,33 @@ def get_team_roster(url):
 	soup = BeautifulSoup(page.content,'lxml')
 	
 	# Find all player tags
-	players_soup = soup.find_all('a', href=re.compile("http://espn[^\s]+player+"))
+	#players_soup = soup.find_all('a', href=re.compile("http://espn[^\s]+player+"))
+	
+	# Get Roster table
+	player_grid = soup.find('div', {'id':'my-teams-table', 'class':'col-main'})
+	# Find each player link tag
+	grid_soup = BeautifulSoup(str(player_grid),'lxml')
+	player_links = grid_soup.find_all('a')
+	# Get stathead...may be useful in the future
+	colhead = grid_soup.find('tr',{'class':'colhead'})
+	statcat_soup = BeautifulSoup(str(colhead),'lxml')
+	# But for now, use the length to exclude stat categories from player extraction
+	statcats = statcat_soup.find_all('a')
 	
 	# Declare lists for player data
 	players_name = []
 	players_id = []
 	players_url = []
+	
+	# Populate lists with each player
+	for link in player_links[len(statcats):]:
+		if link.has_attr('href'):
+			players_url.append(link['href'])
+			players_name.append(link.string)
+			players_id.append(re.search("id\/([^\s]+)\/",link['href']).group(1))
+			#print players_name[-1], players_id[-1], players_url[-1]
+			
+	"""
 	player_info = [[],[],[],[]]
 	
 	# For each player, grab their name, ID, and url
@@ -96,25 +117,26 @@ def get_team_roster(url):
 	# Filter out empty sets
 	player_info = filter(None, player_info)
 	player_info = [x for x in player_info if x!= None and x != []]
+	"""
 	
 	# Get team name from url
 	team = url.split('/')[-1]
 	
 	# Insert player into player table in DB
-	for player in player_info:	
-		add_to_player_table(player, team)
+	for k in range(len(players_name)):	
+		add_to_player_table(players_name[k],players_url[k], players_id[k], team)
 	
-	return player_info
+	return (players_url, players_name, players_id)
 
 # Adds player to 'player' table
 # inputs: player_info as array of player (str), ID (int), url (str) and team (str) 
-def add_to_player_table(player_info, team):
+def add_to_player_table(play_name, play_url, player_id, team):
 		
 	# strip names of special characters
-	name = re.sub("[-.']", "", player_info[0])
-	player_id = player_info[1]
+	name = re.sub("[-.']", "", play_name)
+	#player_id = player_info[1]
 	# escape apostrophes in url
-	url = re.sub("[']", "''", player_info[2])
+	url = re.sub("[']", "''", play_url)
 	
 	# check if player already exists in db
 	sql = """
@@ -153,4 +175,11 @@ def add_to_player_table(player_info, team):
 
 		db_execute(insert_sql)
 				
-
+"""
+create table players
+			player_id int not null,
+			name varchar(30),
+			url varchar(150),
+			team varchar(30)
+			primary key (player_id)
+"""
