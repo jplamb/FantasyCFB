@@ -17,31 +17,36 @@ def get_power_five_roster_links(teamsURL):
 	page = requests.get(teamsURL)
 	tree = html.fromstring(page.content)
 	soup = BeautifulSoup(page.text, 'lxml')
-	powerFive = ['ACC','SEC','Big Ten', 'Big 12','Pac-12']
+	powerFive = ['ACC','SEC','Big Ten', 'Big 12','Pac-12', 'FBS Independents']
 
 	roster_links = []
 	team_names = []
 
 	# Find div block containing power five conference, sort out non P5 conferences
 	powerFiveTag = soup.find_all("h4", string=powerFive)
-
 	for headerOne in powerFiveTag:
 		# Jump up two levels to search block containing team names and URLs
 		parentOne = headerOne.parent
 		parentTwo = parentOne.parent
 		testsoup = BeautifulSoup(str(parentTwo), 'lxml')
 		teams = testsoup.find_all("h5")
-		for team in teams:
-			link = team.a['href']
-			ind = team.a['href'].find('team')
-			if ind >= 0:
-				link = link[:ind+5] + "roster/" + link[ind+5:]
-			team_name = team.a.string
-			
-			if team_name not in team_names and len(link) > 0:
-				team_names.append(team_name)
-				roster_links.append(link)
-			
+		try:
+			for team in teams:
+				team_name = team.a.string
+				if headerOne.string == 'FBS Independents':
+					if team_name != 'BYU' or team_name != 'Notre Dame':
+						raise ValueError('Not P5')
+				
+				link = team.a['href']
+				ind = team.a['href'].find('team')
+				if ind >= 0:
+					link = link[:ind+5] + "roster/" + link[ind+5:]
+				
+				if team_name not in team_names and len(link) > 0:
+					team_names.append(team_name)
+					roster_links.append(link)
+		except ValueError:
+			pass
 		#parTwoDes = parentTwo.descendants
 		"""for tag in parTwoDes:
 			#print unicode(tag)
@@ -60,7 +65,8 @@ def get_power_five_roster_links(teamsURL):
 				# Exclude duplicates
 				if link not in roster_links:
 					roster_links.append(link)
-			"""		
+			"""
+
 	return [roster_links, team_names]
 
 # Retrieve team roster

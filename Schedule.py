@@ -10,6 +10,7 @@ from lxml import html
 from bs4 import BeautifulSoup
 import requests
 import re
+from dateutil.parser import parse
 
 class Schedule:
 	
@@ -69,7 +70,30 @@ class Schedule:
 
 		# Get schedule block
 		schedule_block = soup.find(id="showschedule")
+		grid_rows_soup = BeautifulSoup(str(schedule_block), 'lxml')
+		grid_rows = grid_rows_soup.find_all("tr")
 		
+		for row in grid_rows:
+			if 'stathead' not in row['class'] and 'colhead' not in row['class'] :
+				cur_date = row.td.string
+				cur_date = parse(cur_date).date()
+				date.append(cur_date)
+				
+				game_status = row.find(attrs={"class": "game-status"})
+				if game_status.string == 'vs':
+					status.append('home')
+				else:
+					status.append('away')
+					
+				opp_name = row.find(attrs={"class": "team-name"})
+				opponent.append(opp_name.a.string)
+				
+				opp_id_raw = opp_name.a['href']
+				opp_id.append(opp_id_raw.split('/')[-2])
+				
+				print row.td[1].string
+		quit()
+		"""
 		# Find rows of schedule table
 		for tag in schedule_block.descendants:
 			
@@ -97,7 +121,7 @@ class Schedule:
 			# handle tags without class attribute
 			except AttributeError:
 				pass
-		
+		"""
 		# Format date for storage
 		for count, dt in enumerate(date):
 			dt = dt.split(',')[1].strip()
@@ -130,7 +154,7 @@ class Schedule:
 			select (1)
 			from schedule
 			where team = '%s'
-			and gm_date = str_to_date('%s', '%%b %%d' )
+			and gm_date = str_to_date('%s', '%%Y-%%m-%%d' )
 			""" % (self.team, date)
 		
 		if db_execute(row_exists_sql):
@@ -154,7 +178,7 @@ class Schedule:
 				)
 				values (
 				'%s',
-				str_to_date('%s', '%%b %%d' ),
+				str_to_date('%s', '%%Y-%%m-%%d' ),
 				'%s',
 				'%s',
 				'%s'
@@ -172,7 +196,7 @@ class Schedule:
 				)
 				values (
 				'%s',
-				str_to_date('%s', '%%b %%d' ),
+				str_to_date('%s', '%%Y-%%m-%%d' ),
 				'%s',
 				time_format('%s', '%%h:%%i %%p'),
 				'%s',
@@ -194,7 +218,7 @@ class Schedule:
 				power_five = '%s'
 				where
 				team = '%s' and
-				gm_date = str_to_date('%s', '%%b %%d' )
+				gm_date = str_to_date('%s', '%%Y-%%m-%%d' )
 				""" % (opp, status, opp_power, self.team, date)
 		else:
 			update_sql = """
@@ -206,7 +230,7 @@ class Schedule:
 				power_five = '%s'
 				where
 				team = '%s' and
-				gm_date = str_to_date('%s', '%%b %%d' )
+				gm_date = str_to_date('%s', '%%Y-%%m-%%d' )
 				""" % (opp, time, status, opp_power, self.team, date)		
 			
 		db_execute(update_sql)

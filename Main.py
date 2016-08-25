@@ -132,7 +132,7 @@ action_choice = ['Retrieve players',
 print datetime.datetime.now().time()
 
 # run console
-test_mode = run_test()
+#test_mode = run_test()
 command = run_console(action_choice)
 perform_action(command)
 
