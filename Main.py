@@ -10,6 +10,7 @@ from updateStats import update_stats
 from Schedule import *
 import datetime
 from dbConn import db_execute
+from teams import record_team
 
 # Run console 
 # inputs actions as list of choices (strs)
@@ -26,7 +27,7 @@ def run_console(actions):
 				print act
 
 			print 'You only need to enter a number'
-
+			print ''
 			action  = int(raw_input('Enter an action'))
 		except ValueError:
 			print 'That\'s not a valid number, try again'
@@ -59,7 +60,8 @@ def run_test():
 def perform_action(command):
 	commands = {1 : 'con_get_players',
 				2 : 'con_get_player_stats',
-				3 : 'con_update_schedule'
+				3 : 'con_update_schedule',
+				4 : 'con_print_schedule'
 				}
 	
 	possibles = globals().copy()
@@ -73,17 +75,19 @@ def perform_action(command):
 # returns list of name (str), id (int), url (str)
 def con_get_players():
 	[power_five_roster_links, power_five_team_names] = get_power_five_roster_links('http://espn.go.com/college-football/teams')
+	
+
 	#print power_five_roster_links
 	players_list = [ [], [], [] ]
-	for team_url in power_five_roster_links:
-		# [name, id, url]
-		(urls, names, ids) = get_team_roster(team_url)
-		print urls
-		print names
-		print ids
-		#players_list[0].append(players_returned[0])
-		#players_list[1].append(players_returned[1])
-		#players_list[2].append(players_returned[2])
+	for x in range(len(power_five_team_names)):
+		name = power_five_team_names[x]
+		roster_link = power_five_roster_links[x]
+		team_id = roster_link.split('/')[-2]
+		print name
+		record_team(name, team_id)
+
+		(urls, names, ids) = get_team_roster(roster_link)
+
 		
 	return players_list
 
@@ -118,7 +122,10 @@ def con_update_schedule():
 		schedule_url = roster_urls[count].replace("roster", "schedule")
 		temp_team = Schedule(team, schedule_url)
 		temp_team.get_schedule(schedule_url)
-	
+
+def con_print_schedule():
+	no_team = Schedule(' ',' ')
+	no_team.print_schedule()
 
 # Set test data
 test_player_link = "http://espn.go.com/college-football/player/_/id/530541/brenden-motley"
@@ -128,7 +135,8 @@ test_get_schedule = ['Virginia Tech', "http://espn.go.com/college-football/team/
 # list of prompt options
 action_choice = ['Retrieve players', 
 				 'Get and store player data',
-				 'Retrieve team schedule']
+				 'Retrieve team schedule',
+				 'Print schedule']
 print datetime.datetime.now().time()
 
 # run console

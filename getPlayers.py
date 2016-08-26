@@ -30,23 +30,26 @@ def get_power_five_roster_links(teamsURL):
 		parentTwo = parentOne.parent
 		testsoup = BeautifulSoup(str(parentTwo), 'lxml')
 		teams = testsoup.find_all("h5")
-		try:
-			for team in teams:
-				team_name = team.a.string
-				if headerOne.string == 'FBS Independents':
-					if team_name != 'BYU' or team_name != 'Notre Dame':
-						raise ValueError('Not P5')
-				
-				link = team.a['href']
-				ind = team.a['href'].find('team')
-				if ind >= 0:
-					link = link[:ind+5] + "roster/" + link[ind+5:]
-				
-				if team_name not in team_names and len(link) > 0:
-					team_names.append(team_name)
-					roster_links.append(link)
-		except ValueError:
-			pass
+
+		for team in teams:
+			team_name = team.a.string
+
+			if headerOne.string == 'FBS Independents':
+				if team_name == 'BYU' or team_name == 'Notre Dame':
+					pass
+				else:
+					continue
+			print team_name
+			link = team.a['href']
+			ind = team.a['href'].find('team')
+			if ind >= 0:
+				link = link[:ind+5] + "roster/" + link[ind+5:]
+			
+			if team_name not in team_names and len(link) > 0:
+				team_names.append(team_name)
+				roster_links.append(link)
+
+
 		#parTwoDes = parentTwo.descendants
 		"""for tag in parTwoDes:
 			#print unicode(tag)
@@ -66,7 +69,6 @@ def get_power_five_roster_links(teamsURL):
 				if link not in roster_links:
 					roster_links.append(link)
 			"""
-
 	return [roster_links, team_names]
 
 # Retrieve team roster

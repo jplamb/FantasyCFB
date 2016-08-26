@@ -11,6 +11,7 @@ from bs4 import BeautifulSoup
 import requests
 import re
 from dateutil.parser import parse
+from datetime import date, timedelta
 
 class Schedule:
 	
@@ -91,8 +92,9 @@ class Schedule:
 				opp_id_raw = opp_name.a['href']
 				opp_id.append(opp_id_raw.split('/')[-2])
 				
-				print row.td[1].string
-		quit()
+				time_raw = row.find_all('td')[2].contents[0].strip()
+				time.append(time_raw)
+		
 		"""
 		# Find rows of schedule table
 		for tag in schedule_block.descendants:
@@ -121,7 +123,7 @@ class Schedule:
 			# handle tags without class attribute
 			except AttributeError:
 				pass
-		"""
+		
 		# Format date for storage
 		for count, dt in enumerate(date):
 			dt = dt.split(',')[1].strip()
@@ -129,7 +131,7 @@ class Schedule:
 			day = dt[4:]
 			seq = (month, day)
 			date[count] = ' '.join(seq)
-			
+		"""
 			
 		# Record schedule by row
 		for count, game in enumerate(opponent):
@@ -203,6 +205,7 @@ class Schedule:
 				'%s'
 				)
 				""" %(self.team, date, opp, time, status, opp_power)
+		print insert_sql
 		db_execute(insert_sql)
 	
 	# Update schedule row in table
@@ -225,14 +228,14 @@ class Schedule:
 				update schedule 
 				set 
 				opp = '%s',
-				gm_time = time_format('%s', '%%h:%%i %%p),
+				gm_time = time_format('%s', '%%h:%%i %%p'),
 				status = '%s',
 				power_five = '%s'
 				where
 				team = '%s' and
 				gm_date = str_to_date('%s', '%%Y-%%m-%%d' )
 				""" % (opp, time, status, opp_power, self.team, date)		
-			
+		print update_sql
 		db_execute(update_sql)
 		
 	# is team a power five team?
@@ -250,11 +253,52 @@ class Schedule:
 			return 'Y'
 		else:
 			return 'N'
+	
+	def print_schedule(self):
+		start_date = date(2016, 8, 30)
+		end_date = date(2016, 12, 15)
 		
+		teams = self.get_power_five_teams()
+		
+		f = open('schedule2016.txt','w')
+		f.write('Team, ')
+		while start_date < end_date:
+			week_end = start_date + timedelta(days=6)
+			f.write(' %s - %s, '%(start_date.strftime('%m/%d'), week_end.strftime('%m/%d')))
+			start_date = week_end + timedelta(days=1)
+
+		for team in teams:
+			team = team[0]
+			
+			start_date = date(2016, 8, 30)
+			f.write('\n%s, ' %(team))
+			while start_date < end_date:
+				week_end = start_date + timedelta(days=6)
+
+				sql = """
+					select team, opp, power_five
+					from schedule
+					where team = '%s'
+					and gm_date between str_to_date('%s', '%%Y-%%m-%%d' )
+					and str_to_date('%s', '%%Y-%%m-%%d' )
+					"""% (team, start_date, week_end)
+				result = db_execute(sql)
+				if result:
+					print result[0]
+					f.write(' %s, '%(result[0][1]))
+				else:
+					f.write(' No Game, ')
+				start_date = week_end + timedelta(days=1)
+		f.close()
 		
 
+	def get_power_five_teams(self):
+		sql = """
+			select team from teams
+			"""
+		teams = db_execute(sql)
 		
-		
+		return teams
 		
 		
 		
