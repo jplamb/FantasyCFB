@@ -39,7 +39,7 @@ def get_power_five_roster_links(teamsURL):
 					pass
 				else:
 					continue
-			print team_name
+
 			link = team.a['href']
 			ind = team.a['href'].find('team')
 			if ind >= 0:
@@ -48,7 +48,6 @@ def get_power_five_roster_links(teamsURL):
 			if team_name not in team_names and len(link) > 0:
 				team_names.append(team_name)
 				roster_links.append(link)
-
 
 		#parTwoDes = parentTwo.descendants
 		"""for tag in parTwoDes:
@@ -74,7 +73,7 @@ def get_power_five_roster_links(teamsURL):
 # Retrieve team roster
 # Inputs: team url as string
 # Returns: players' info as list of lists
-def get_team_roster(url):
+def get_team_roster(url, team_name):
 	page = requests.get(url)
 	tree = html.fromstring(page.content)
 	soup = BeautifulSoup(page.content,'lxml')
@@ -97,6 +96,7 @@ def get_team_roster(url):
 	players_name = []
 	players_id = []
 	players_url = []
+	players_pos = []
 	
 	# Populate lists with each player
 	for link in player_links[len(statcats):]:
@@ -105,6 +105,8 @@ def get_team_roster(url):
 			players_name.append(link.string)
 			players_id.append(re.search("id\/([^\s]+)\/",link['href']).group(1))
 			#print players_name[-1], players_id[-1], players_url[-1]
+			pos = link.parent.next_sibling.string
+			players_pos.append(pos)
 			
 	"""
 	player_info = [[],[],[],[]]
@@ -126,19 +128,18 @@ def get_team_roster(url):
 	player_info = filter(None, player_info)
 	player_info = [x for x in player_info if x!= None and x != []]
 	"""
-	
 	# Get team name from url
-	team = url.split('/')[-1]
+	#team = url.split('/')[-1]
 	
 	# Insert player into player table in DB
 	for k in range(len(players_name)):	
-		add_to_player_table(players_name[k],players_url[k], players_id[k], team)
+		add_to_player_table(players_name[k],players_url[k], players_id[k], team_name, players_pos[k])
 	
 	return (players_url, players_name, players_id)
 
 # Adds player to 'player' table
 # inputs: player_info as array of player (str), ID (int), url (str) and team (str) 
-def add_to_player_table(play_name, play_url, player_id, team):
+def add_to_player_table(play_name, play_url, player_id, team, pos):
 		
 	# strip names of special characters
 	name = re.sub("[-.']", "", play_name)
@@ -160,10 +161,11 @@ def add_to_player_table(play_name, play_url, player_id, team):
 			set 
 			name = '%s',
 			url = '%s',
-			team = '%s'
+			team = '%s',
+			position = '%s'
 			where 
 			player_id = %s
-			""" % (name, url, team, player_id)
+			""" % (name, url, team, pos, player_id)
 
 		db_execute(update_sql)
 
@@ -173,21 +175,39 @@ def add_to_player_table(play_name, play_url, player_id, team):
 			player_id,
 			name,
 			url,
-			team)
+			team,
+			position)
 			values (
 			%s,
 			'%s',
 			'%s',
+			'%s',
 			'%s')
-			""" % (player_id, name, url, team)
+			""" % (player_id, name, url, team, pos)
 
 		db_execute(insert_sql)
 				
+def print_players():
+		
+		f = open('players2016.txt','w')
+		f.write('Player, Team, Position')
+
+		sql = """
+				select name, team, position
+				from players
+				"""
+				
+		result = db_execute(sql)
+		
+		for player in result:
+			f.write('\n%s, %s, %s'%(player[0], player[1], player[2]))
+		f.close()
 """
 create table players
 			player_id int not null,
 			name varchar(30),
 			url varchar(150),
-			team varchar(30)
+			team varchar(30),
+			position varchar(3)
 			primary key (player_id)
 """

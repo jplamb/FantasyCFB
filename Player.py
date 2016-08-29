@@ -40,7 +40,7 @@ class Player:
 	def set_stats(self, gamelog):
 		
 		# Make sure the table exists first
-		if not self.check_table_exists(self.table_name):
+		if not check_table_exists(self.table_name):
 			self.create_player_stats_table(self.table_name)			
 		
 		# Base string for insert statement
@@ -51,16 +51,15 @@ class Player:
 			insert_sql_cols += self.get_corres_col_name(str(colname).replace(" ","_").lower()) + ','
 		insert_sql_cols = insert_sql_cols[:-1] + """) values (%s, '%s',""" %(self.ID, self.name)
 		
-		open_db_connection()
 		
 		# Generate SQL insert/update statements for each row in gamelog
 		# Loop through each row in the gamelog except header row
 		for row in range(1,len(gamelog)):
 			
 			# SQL to check if row already exists in db
-			row_check = """select count(1) 
+			row_check = """select (1)
 						from %s 
-						where player_id = %s
+						where player_id = %s and 
 						game_date = '%s' """ 
 			
 			# Set update/insert base sql strings
@@ -69,10 +68,10 @@ class Player:
 			
 			# Execute row check
 			row_check = row_check % (self.table_name, self.ID, gamelog[row][0])
-			cursor.execute(row_check)
+			
 			
 			# If already in db, run update
-			if cursor.fetchone()[0]:
+			if db_execute(row_check):
 				for count, stat in enumerate(gamelog[row]):
 					update_sql += self.get_corres_col_name(str(gamelog[0][count]).replace(" ","_").lower()) + '='
 					
@@ -82,7 +81,7 @@ class Player:
 					else:
 						update_sql += "%s," % str(stat)
 				update_sql = update_sql[:-1] + "where game_date = '%s' and player_id = %s" %(gamelog[0][0], self.ID)
-				cursor.execute(update_sql)
+				db_execute(update_sql)
 				
 			# If not, run insert
 			else:
@@ -93,9 +92,8 @@ class Player:
 					else:
 						insert_sql += str(stat) + ','
 				insert_sql = insert_sql[:-1] + ')'
-				cursor.execute(insert_sql)
+				db_execute(insert_sql)
 													
-		close_db()
 		
 	# Maps html stat name with db column name
 	# Input: html stat column as string
@@ -163,7 +161,6 @@ class Player:
 	# Return: stat as float
 	def get_statistic(self, stat_cat, table_name, date):
 		
-		open_db_connection()
 		
 		select_sql = """
 				select %s 
@@ -172,17 +169,14 @@ class Player:
 				and player_id = %s
 				""" % (stat_cat, table_name, date, self.ID)
 		
-		result = float(cursor.execute(select_sql))
-		
-		close_db()
-		
+		result = float(db_execute(select_sql))
+				
 		return result
 			
 	# create player's stats table
 	# Input: player table name
 	# Returns:
 	def create_player_stats_table(self, name):
-		open_db_connection()
 		
 		create_string = """create table %s (
 			game_date varchar(10) not null,
@@ -238,9 +232,8 @@ class Player:
 			primary key (game_date, player_id)
 			)""" % name
 		
-		cursor.execute(create_string)
+		db_execute(create_string)
 		
-		close_db()
 		
 	
 				

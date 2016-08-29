@@ -5,9 +5,11 @@
 #  www.themanualoverride.com
 #################################################
 
-from getPlayers import get_power_five_roster_links, get_team_roster
+from getPlayers import get_power_five_roster_links, get_team_roster, print_players
 from updateStats import update_stats
 from Schedule import *
+from getPlayerStats import get_player_stats
+import Player
 import datetime
 from dbConn import db_execute
 from teams import record_team
@@ -61,7 +63,8 @@ def perform_action(command):
 	commands = {1 : 'con_get_players',
 				2 : 'con_get_player_stats',
 				3 : 'con_update_schedule',
-				4 : 'con_print_schedule'
+				4 : 'con_print_schedule',
+				5 : 'con_print_players'
 				}
 	
 	possibles = globals().copy()
@@ -86,7 +89,7 @@ def con_get_players():
 		print name
 		record_team(name, team_id)
 
-		(urls, names, ids) = get_team_roster(roster_link)
+		(urls, names, ids) = get_team_roster(roster_link, name)
 
 		
 	return players_list
@@ -94,9 +97,28 @@ def con_get_players():
 # Get stats (game log) for players
 # inputs names as list of string, id as list of ints, and url as list of strings
 def con_get_player_stats():
-	(names, ids, urls) = con_get_players()
+	#(names, ids, urls) = con_get_players()
 	game_logs = []
 	
+	sql = """
+			select name, player_id, url
+			from players
+			"""
+	result = db_execute(sql)
+	
+	for player in result:
+		name = player[0]
+		id = player[1]
+		url = player[2]
+		
+		play_game_log = get_player_stats(url)
+		print player
+		print play_game_log
+		if play_game_log:
+			temp_player = Player.Player(name, id, url)
+			temp_player.set_stats(play_game_log)
+	
+	"""
 	for url in urls:
 		#print url
 		play_game_log = get_player_stats(url)
@@ -104,6 +126,7 @@ def con_get_player_stats():
 		game_logs.append(play_game_log)
 	
 	con_save_player_stats(names, ids, urls,game_logs)
+	"""
 
 # Saves players stats to DB
 # inputs names as list of strings, ids as list of ints, urls as list of strings, and game log as list
@@ -126,7 +149,10 @@ def con_update_schedule():
 def con_print_schedule():
 	no_team = Schedule(' ',' ')
 	no_team.print_schedule()
-
+	
+def con_print_players():
+	print_players();
+	
 # Set test data
 test_player_link = "http://espn.go.com/college-football/player/_/id/530541/brenden-motley"
 test_get_roster_link = 'http://espn.go.com/college-football/teams'
@@ -136,7 +162,8 @@ test_get_schedule = ['Virginia Tech', "http://espn.go.com/college-football/team/
 action_choice = ['Retrieve players', 
 				 'Get and store player data',
 				 'Retrieve team schedule',
-				 'Print schedule']
+				 'Print schedule',
+				 'Print players']
 print datetime.datetime.now().time()
 
 # run console
