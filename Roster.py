@@ -9,62 +9,92 @@ class Roster:
 	
 	# init creates table and adds players to roster table
 	# inputs: team name as string, team_players as list
-	def __init__(self, team_name,team_players):
+	def __init__(self, team_name):
 		self.team_name = team_name
-		self.team_players = team_players
-		self.table_name = "_".join(name.lower().split(" "))
+		self.team_players = self.get_team_players() 
+		self.table_name = team_name
 		
 		if not check_table_exists(table_name):
 			self.create_team_roster(self.table_name)
 		
-		update_roster_players(team_players)
+		#update_roster_players(team_players)
 	
 	# create roster table
 	def create_team_roster(self):
 						
 		create_string = """ create table %s
-				player varchar(20) not null
-				pos varchar(2)
-				starting varchar(1) not null
-				elig varchar(1) not null
-				opp varchar(20)""" % self.table_name
+				week int not null,
+				player_name varchar(20) not null,
+				pos varchar(2),
+				starting varchar(1) not null,
+				points_elig varchar(1) not null,
+				points float,
+				opp varchar(20)
+				primary key (week, player_name
+				)""" % self.table_name
 		
 		db_execute(create_string)
 	
+	# interface with google sheet to pull in roster
+	def get_team_players():
+		#players = []
+		pass
+		# self.update_roster(players, week)
+		#return players
+	
 	# Delete all rows and add players, set elig and start to 'N'
 	# inputs: team players as list (not attribute of class in case called externally
-	def update_roster_players(self, team_players):
-				
-		truncate_sql = """truncate %s
-					""" % self.table_name
+	def update_roster(self, players, week):
+		delete_sql = """
+			delete from %s
+			where week = %s
+			""" %(self.table_name, week)
 		
+		db_execute(delete_sql)
+		
+		for player in players:
+			# check_row_sql = """
+			# 	select (1) from %s
+			# 	where week = %s
+			# 	and player = '%s'
+			# 	""" %(self.table_name, week, player)
+			# if db_execute(check_row_sql):
+				#self.update_player(player, week)
+			#else:
+			self.insert_player(player, week)
+	
+	def update_roster_stats(self, week):
+		for player in self.team_players:
+			pass
+		# get latest game log
+		# run sql to update current stats
+	
+	def update_player(self, player, week, points_elig, pos, starting, opp):
+		update_sql = """
+				update %s set
+				points_elig = '%s',
+				pos = '%s',
+				starting = '%s',
+				opp = '%s'
+				where week = %s
+				and player = '%s'
+				""" %(self.table_name, points_elig, pos, starting, opp, week, player)
+
+		db_execute(update_sql)
+	
+	def insert_player(self, player, week, points_elig, pos, starting, opp):
 		insert_sql = """
 				insert into %s
-				(player, starting, elig)
+				(week, player, points_elig, points, pos, starting, opp)
 				values
-				('%s', 'N', 'N')
-				""" 
-		for player in team_players:
-			sql = insert_sql % (self.table_name, player)
-			db_execute(sql)
-			
-	# Get schedule details and update opp, then update eligibility
-	def update_opps(self):
-		print ""
-		
-	# Update player starting status
-	# inputs: Player_starts as 2D list (player, status)
-	def update_starters(self, player_starts):
+				(%s, '%s', '%s', 0, '%s', '%s', '%s')
+				"""%(self.table_name, week, player, points_elig, pos, starting, opp)
 				
-		update_sql = """
-				update %s
-				set status = '%s'
-				where player = '%s'
-				"""
-		
-		for player in player_starts:
-			sql = update_sql % (self.table_name, player[1], player[2])
-			db_execute(sql)
+		db_execute(insert_sql)
+
+			
+
+
 		
 		
 	
