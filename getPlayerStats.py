@@ -26,7 +26,7 @@ def get_player_stats(url):
 	stathead = []
 	for grid in grids:
 		for child in grid.children:
-			if child.string and "2015 Game Log" in child.string:
+			if child.string and "2016 Game Log" in child.string:
 				stathead = grid
 				break
 				

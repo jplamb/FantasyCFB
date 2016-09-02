@@ -13,6 +13,7 @@ import Player
 import datetime
 from dbConn import db_execute
 from teams import record_team
+import Roster
 
 # Run console 
 # inputs actions as list of choices (strs)
@@ -30,7 +31,7 @@ def run_console(actions):
 
 			print 'You only need to enter a number'
 			print ''
-			action  = int(raw_input('Enter an action'))
+			action  = int(raw_input('Enter an action\n'))
 		except ValueError:
 			print 'That\'s not a valid number, try again'
 		else:
@@ -64,7 +65,8 @@ def perform_action(command):
 				2 : 'con_get_player_stats',
 				3 : 'con_update_schedule',
 				4 : 'con_print_schedule',
-				5 : 'con_print_players'
+				5 : 'con_print_players',
+				6 : 'con_update_rosters'
 				}
 	
 	possibles = globals().copy()
@@ -153,6 +155,14 @@ def con_print_schedule():
 def con_print_players():
 	print_players();
 	
+def con_update_rosters():
+	teams = ['Team John B', 'Team Jack', 'Team John L', 'Team Mike', 'Team Scott', 'Team Frankie']
+	week = raw_input('What week is it?\n')
+	
+	for team in teams:
+		temp_team = Roster.Roster(team)
+		temp_team.update_roster(week)
+	
 # Set test data
 test_player_link = "http://espn.go.com/college-football/player/_/id/530541/brenden-motley"
 test_get_roster_link = 'http://espn.go.com/college-football/teams'
@@ -163,7 +173,8 @@ action_choice = ['Retrieve players',
 				 'Get and store player data',
 				 'Retrieve team schedule',
 				 'Print schedule',
-				 'Print players']
+				 'Print players',
+				 'Update Rosters']
 print datetime.datetime.now().time()
 
 # run console
