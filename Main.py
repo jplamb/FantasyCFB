@@ -162,6 +162,18 @@ def con_update_rosters():
 	for team in teams:
 		temp_team = Roster.Roster(team)
 		temp_team.update_roster(week)
+
+def con_post_team_stats():
+	teams = ['Team John B', 'Team Jack', 'Team John L', 'Team Mike', 'Team Scott', 'Team Frankie']
+	week = raw_input('What week is it?\n')
+	
+	for team in teams:
+		temp_team = Roster.Roster(team)
+		players = temp_team.team_players_bnch + temp_team.team_players_strt
+		for player in players:
+			#temp_player = Player()
+			#temp_player.get_points()
+			#temp_team.set_player_points(week, player)
 	
 # Set test data
 test_player_link = "http://espn.go.com/college-football/player/_/id/530541/brenden-motley"
