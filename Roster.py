@@ -61,12 +61,14 @@ class Roster:
 		for player in self.team_players_bnch:
 			self.insert_player(week, False, player)
 	
+	# Future method to update players stats 
 	def update_roster_stats(self, week):
 		for player in self.team_players:
 			pass
 		# get latest game log
 		# run sql to update current stats
 	
+	# Add players to table
 	def insert_player(self, week, start, *player):
 		player = player[0]
 		

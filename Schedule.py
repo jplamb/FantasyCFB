@@ -95,55 +95,9 @@ class Schedule:
 				time_raw = row.find_all('td')[2].contents[0].strip()
 				time.append(time_raw)
 		
-		"""
-		# Find rows of schedule table
-		for tag in schedule_block.descendants:
-			
-			# iterate through all schedule block tags
-			try:
-				if tag.has_attr('class') and tag is not None:
-					# get game home/away status
-					if 'game-status' in tag['class']:
-						if tag.string == 'vs':
-							status.append('home')
-						else:
-							status.append('away')
-					# get opponent
-					elif 'team-name' in tag['class']:
-						#print tag.string
-						opponent.append(tag.contents[0].string)
-						opp_id_raw = tag.contents[0]['href']
-						opp_id.append(opp_id_raw.split('/')[-2])
-					# get game date and game time
-					elif 'evenrow' in tag['class'] or 'oddrow' in tag['class']:
-						#date
-						date.append(tag.contents[0].string)
-						#time
-						time.append(tag.contents[2].contents[0].strip())
-			# handle tags without class attribute
-			except AttributeError:
-				pass
-		
-		# Format date for storage
-		for count, dt in enumerate(date):
-			dt = dt.split(',')[1].strip()
-			month = dt[:3]
-			day = dt[4:]
-			seq = (month, day)
-			date[count] = ' '.join(seq)
-		"""
 			
 		# Record schedule by row
 		for count, game in enumerate(opponent):
-			"""
-			print date[count],
-			print " at ",
-			print time[count]
-			print status[count],
-			print opponent[count],
-			print "(", opp_id[count], ")"
-			print ""
-			"""
 			self.record_schedule(date[count], opponent[count], status[count], time[count], opp_id[count])
 	
 	# Handle schedule updates
@@ -254,6 +208,7 @@ class Schedule:
 		else:
 			return 'N'
 	
+	# Output schedule as text file
 	def print_schedule(self):
 		start_date = date(2016, 8, 30)
 		end_date = date(2016, 12, 15)
@@ -291,7 +246,7 @@ class Schedule:
 				start_date = week_end + timedelta(days=1)
 		f.close()
 		
-
+	# Returns list of teams in the db which assumes only P5 teams are stored
 	def get_power_five_teams(self):
 		sql = """
 			select team from teams

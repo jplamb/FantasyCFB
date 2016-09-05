@@ -48,6 +48,7 @@ def get_credentials():
         print('Storing credentials to ' + credential_path)
     return credentials
 
+# Retrieve values in provided range
 def get_values(rangeName):
     credentials = get_credentials()
     http = credentials.authorize(httplib2.Http())
@@ -57,9 +58,7 @@ def get_values(rangeName):
                               discoveryServiceUrl=discoveryUrl)
 
     spreadsheetId = '1zSEYZLVuCdJilT0Oo_wy3QO7WlXGJoX7cMez64e19W8'
-    #rangeName = 'Draft!A2:A8'
-    #rangeName = 'Team - John B!A3:E'
-    
+
     result = service.spreadsheets().values().get(
         spreadsheetId=spreadsheetId, range=rangeName).execute()
     values = result.get('values', [])

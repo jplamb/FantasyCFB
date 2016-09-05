@@ -148,13 +148,16 @@ def con_update_schedule():
 		temp_team = Schedule(team, schedule_url)
 		temp_team.get_schedule(schedule_url)
 
+# Outputs schedule as a text file
 def con_print_schedule():
 	no_team = Schedule(' ',' ')
 	no_team.print_schedule()
-	
+
+# Outputs list of all players as a text file
 def con_print_players():
 	print_players();
-	
+
+# Get current rosters and store them in DB
 def con_update_rosters():
 	teams = ['Team John B', 'Team Jack', 'Team John L', 'Team Mike', 'Team Scott', 'Team Frankie']
 	week = raw_input('What week is it?\n')
@@ -163,6 +166,7 @@ def con_update_rosters():
 		temp_team = Roster.Roster(team)
 		temp_team.update_roster(week)
 
+# Retrieve this weeks stats and save them to roster table
 def con_post_team_stats():
 	teams = ['Team John B', 'Team Jack', 'Team John L', 'Team Mike', 'Team Scott', 'Team Frankie']
 	week = raw_input('What week is it?\n')
@@ -171,14 +175,15 @@ def con_post_team_stats():
 		temp_team = Roster.Roster(team)
 		players = temp_team.team_players_bnch + temp_team.team_players_strt
 		for player in players:
+			pass
 			#temp_player = Player()
 			#temp_player.get_points()
 			#temp_team.set_player_points(week, player)
 	
 # Set test data
-test_player_link = "http://espn.go.com/college-football/player/_/id/530541/brenden-motley"
-test_get_roster_link = 'http://espn.go.com/college-football/teams'
-test_get_schedule = ['Virginia Tech', "http://espn.go.com/college-football/team/schedule/_/id/259/virginia-tech-hokies"]
+#test_player_link = "http://espn.go.com/college-football/player/_/id/530541/brenden-motley"
+#test_get_roster_link = 'http://espn.go.com/college-football/teams'
+#test_get_schedule = ['Virginia Tech', "http://espn.go.com/college-football/team/schedule/_/id/259/virginia-tech-hokies"]
 
 # list of prompt options
 action_choice = ['Retrieve players', 

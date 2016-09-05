@@ -107,30 +107,7 @@ def get_team_roster(url, team_name):
 			#print players_name[-1], players_id[-1], players_url[-1]
 			pos = link.parent.next_sibling.string
 			players_pos.append(pos)
-			
-	"""
-	player_info = [[],[],[],[]]
-	
-	# For each player, grab their name, ID, and url
-	count  = 0
-	for player in players_soup:
-		if player is not None and player.string is not None:
-			player_info.append([player.string, re.search("id\/([^\s]+)\/",unicode(players_soup[count])).group(1),player['href']])
-			count +=1
-		#players_name.append(player.string)
-		#players_id.append(re.search("id\/([^\s]+)\/",unicode(players_soup[0])).group(1))
-		#players_url.append(player['href'])
-	
-	# Pass back all three lists as one
-	players = [players_name, players_id, players_url]
-	
-	# Filter out empty sets
-	player_info = filter(None, player_info)
-	player_info = [x for x in player_info if x!= None and x != []]
-	"""
-	# Get team name from url
-	#team = url.split('/')[-1]
-	
+				
 	# Insert player into player table in DB
 	for k in range(len(players_name)):	
 		add_to_player_table(players_name[k],players_url[k], players_id[k], team_name, players_pos[k])
@@ -186,7 +163,8 @@ def add_to_player_table(play_name, play_url, player_id, team, pos):
 			""" % (player_id, name, url, team, pos)
 
 		db_execute(insert_sql)
-				
+
+# Output all players to text file			
 def print_players():
 		
 		f = open('players2016.txt','w')
@@ -202,6 +180,8 @@ def print_players():
 		for player in result:
 			f.write('\n%s, %s, %s'%(player[0], player[1], player[2]))
 		f.close()
+		
+# For reference, table structure
 """
 create table players
 			player_id int not null,

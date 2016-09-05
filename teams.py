@@ -32,7 +32,8 @@ def record_team(team_name, team_id):
         update_team(team_name, team_id)
     else:
         insert_team(team_name, team_id)
-        
+
+# Add team to table      
 def insert_team(team_name, team_id):
     insert_sql = """
             insert into teams (
@@ -46,7 +47,8 @@ def insert_team(team_name, team_id):
             """ %(team_name, team_id)
     print insert_sql
     db_execute(insert_sql)
-  
+
+# Update team row 
 def update_team(team_name, team_id):
 
     update_sql = """
