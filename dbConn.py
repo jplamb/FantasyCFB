@@ -7,12 +7,15 @@ import base64
 import MySQLdb
 
 # open db connection to ffbdev
-def open_db_connection():
+def open_db_connection(dict):
 	global db
 	global cursor
 	db = MySQLdb.connect('localhost', 'appuser', base64.b64decode('YXBwdXNlcg=='), 'ffbdev')
 	
-	cursor = db.cursor()
+	if not dict:
+		cursor = db.cursor()
+	else:
+		cursor = db.cursor(dictionary=True)
 	
 # close db connection to ffbdev and commit
 def close_db():
@@ -23,7 +26,7 @@ def close_db():
 # Inputs: player table name
 # Returns boolean if table exists
 def check_table_exists(name):
-	open_db_connection()
+	open_db_connection(False)
 		
 	show = 'show tables like \'%s\'' % name
 	result = cursor.execute(show)
@@ -40,7 +43,18 @@ def execute_sql(sql):
 	
 # mask db operations
 def db_execute(sql):
-	open_db_connection()
+	open_db_connection(False)
+	
+	execute_sql(sql)
+	result = cursor.fetchall()
+	
+	close_db()
+	
+	return result
+
+# retrieve results as dict
+def db_dict_execute(sql):
+	open_db_connection(True)
 	
 	execute_sql(sql)
 	result = cursor.fetchall()

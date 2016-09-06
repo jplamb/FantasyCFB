@@ -100,6 +100,8 @@ def con_get_players():
 # inputs names as list of string, id as list of ints, and url as list of strings
 def con_get_player_stats():
 	#(names, ids, urls) = con_get_players()
+	week = raw_input('What week is it?\n')
+
 	game_logs = []
 	
 	sql = """
@@ -115,10 +117,9 @@ def con_get_player_stats():
 		
 		play_game_log = get_player_stats(url)
 		print player
-		print play_game_log
 		if play_game_log:
 			temp_player = Player.Player(name, id, url)
-			temp_player.set_stats(play_game_log)
+			temp_player.set_stats(play_game_log, week)
 	
 	"""
 	for url in urls:

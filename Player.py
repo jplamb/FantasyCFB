@@ -37,19 +37,19 @@ class Player:
 	# Insert or Update rows of gamelog into db
 	# Input: player's gamelog
 	# Returns: 
-	def set_stats(self, gamelog):
+	def set_stats(self, gamelog, week):
 		
 		# Make sure the table exists first
 		if not check_table_exists(self.table_name):
 			self.create_player_stats_table(self.table_name)			
 		
 		# Base string for insert statement
-		insert_sql_cols = 'insert into %s (player_id, player_name,' % self.table_name
+		insert_sql_cols = 'insert into %s (player_id, player_name, week,' % self.table_name
 
 		# Generate insert statement base with columns
 		for colname in gamelog[0]:
 			insert_sql_cols += self.get_corres_col_name(str(colname).replace(" ","_").lower()) + ','
-		insert_sql_cols = insert_sql_cols[:-1] + """) values (%s, '%s',""" %(self.ID, self.name)
+		insert_sql_cols = insert_sql_cols[:-1] + """) values (%s, '%s', %s,""" %(self.ID, self.name, week)
 		
 		
 		# Generate SQL insert/update statements for each row in gamelog
@@ -60,14 +60,14 @@ class Player:
 			row_check = """select (1)
 						from %s 
 						where player_id = %s and 
-						game_date = '%s' """ 
+						week = %s """ 
 			
 			# Set update/insert base sql strings
 			update_sql = """update %s set """ % self.table_name
 			insert_sql = insert_sql_cols
 			
 			# Execute row check
-			row_check = row_check % (self.table_name, self.ID, gamelog[row][0])
+			row_check = row_check % (self.table_name, self.ID, week)
 			
 			
 			# If already in db, run update
@@ -77,10 +77,11 @@ class Player:
 					
 					# Make sure string type columns take in data as string format
 					if isinstance(stat, basestring):
+						stat = str(stat).translate(None, "',_")
 						update_sql += "'%s'," % str(stat) 
 					else:
 						update_sql += "%s," % str(stat)
-				update_sql = update_sql[:-1] + "where game_date = '%s' and player_id = %s" %(gamelog[0][0], self.ID)
+				update_sql = update_sql[:-1] + "where week = %s and player_id = %s" %(week, self.ID)
 				db_execute(update_sql)
 				
 			# If not, run insert
@@ -88,6 +89,7 @@ class Player:
 				for stat in gamelog[row]:
 					# Check if state needs to be input as string
 					if isinstance(stat, basestring):
+						stat = str(stat).translate(None, "',-_")
 						insert_sql += "'%s'," % str(stat)
 					else:
 						insert_sql += str(stat) + ','
@@ -179,8 +181,9 @@ class Player:
 	def create_player_stats_table(self, name):
 		
 		create_string = """create table %s (
-			game_date varchar(10) not null,
+			week int not null,
 			player_id int not null,
+			game_date varchar(10),
 			player_name varchar(30),
 			opp varchar(20),
 			result varchar(20),
@@ -229,7 +232,7 @@ class Player:
 			punt_avg float not null default 0,
 			punt_long int not null default 0,
 			punt_total_yrds int not null default 0,
-			primary key (game_date, player_id)
+			primary key (week, player_id)
 			)""" % name
 		
 		db_execute(create_string)
