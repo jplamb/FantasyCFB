@@ -1,5 +1,5 @@
 # Calculate player points
-
+from dbConn import db_execute, db_dict_execute
 # Main method
 def calc_all_player_points():
     
@@ -82,14 +82,49 @@ def create_points_table():
     db_execute(create_string)
 
 def input_points_stats():
+    dict = {}
+    content = [line.rstrip('\n') for line in open('points-stats.txt')]
     
-    f.open('points-stats.txt','r')
+    for line in content:
+        (stat, p) = line.split(':', 2)
+        dict[stat] = p.strip()
     
-    # read in comma deliminated file of points per stat
+    insert_points_stats(dict)
+    
+def insert_points_stats(dict):
+    check_row_exists_sql = """
+                select (1) from points_stats
+                where effdt = str_to_date(%s, '%%m/%%d/%%Y')
+                """ %(dict['effdt'])
+    
+    if db_execute(check_row_exists_sql):
+        delete_sql = """ delete from points_stats
+                    where effdt = str_to_date(%s, '%%m/%%d/%%Y')"""%(dict['effdt'])
+        db_execute(delete_sql)
+        
+    date = dict.pop('effdt', None)
 
+    insert_sql = """
+            insert into points_stats (effdt,"""
+    
+    for k in dict.keys():
+        insert_sql += k + ','
+    
+    insert_sql = insert_sql[:-1]
+    insert_sql += """) values (str_to_date('%s', '%%m/%%d/%%Y'),"""%(date)
+    
+    
+    for k in dict.keys():
+        insert_sql += dict[k] + ','
+        
+    insert_sql = insert_sql[:-1] + ')'
+    print insert_sql
+    db_execute(insert_sql)
+    
+    
 def create_points__stats_table():
     create_string = """create table points_stats (
-            effdt date note null,
+            effdt date not null,
 			completions float not null default 0,
 			pass_att float not null default 0,
 			pass_yards float not null default 0,
@@ -101,6 +136,7 @@ def create_points__stats_table():
 			raw_qbr float not null default 0,
 			adj_qbr float not null default 0,
 			rush_att float not null default 0,
+            qb_rush float not null default 0,
 			rush_yards float not null default 0,
 			rush_avg float not null default 0,
 			rush_long float not null default 0,
@@ -119,7 +155,7 @@ def create_points__stats_table():
 			fg_pct float not null default 0,
 			fg_long float not null default 0,
 			xp_made float not null default 0,
-			xp_att float not null default 0,
+			xp_miss float not null default 0,
 			kick_points float not null default 0,
 			def_tot_tack float not null default 0,
 			def_unassist_tack float not null default 0,
@@ -135,6 +171,7 @@ def create_points__stats_table():
 			punt_avg float not null default 0,
 			punt_long float not null default 0,
 			punt_total_yrds float not null default 0,
-			primary key (effdt)
+			primary key (effdt))
             """
+    db_execute(create_string)
     

@@ -7,6 +7,7 @@
 import MySQLdb
 import base64
 from dbConn import *
+from time import strptime
 
 # Player class interfaces with database to retrieve and store data
 class Player:
@@ -37,8 +38,8 @@ class Player:
 	# Insert or Update rows of gamelog into db
 	# Input: player's gamelog
 	# Returns: 
-	def set_stats(self, gamelog, week):
-		
+	def set_stats(self, gamelog):
+		week = self.getWeek(gamelog[1][0])
 		# Make sure the table exists first
 		if not check_table_exists(self.table_name):
 			self.create_player_stats_table(self.table_name)			
@@ -185,7 +186,7 @@ class Player:
 			player_id int not null,
 			game_date varchar(10),
 			player_name varchar(30),
-			opp varchar(20),
+			opp varchar(30),
 			result varchar(20),
 			completions int not null default 0,
 			pass_att int not null default 0,
@@ -237,8 +238,39 @@ class Player:
 		
 		db_execute(create_string)
 		
+	def getWeek(self, date):
+		date = strptime(date, '%m/%d/%Y')
 		
-	
+		if date < strptime('9/5/2016', '%m/%d/%Y'):
+			return 1
+		elif date < strptime('9/12/2016', '%m/%d/%Y'):
+			return 2
+		elif date < strptime('9/19/2016', '%m/%d/%Y'):
+			return 3
+		elif date < strptime('9/26/2016', '%m/%d/%Y'):
+			return 4
+		elif date < strptime('10/3/2016', '%m/%d/%Y'):
+			return 5
+		elif date < strptime('10/10/2016', '%m/%d/%Y'):
+			return 6
+		elif date < strptime('10/17/2016', '%m/%d/%Y'):
+			return 7
+		elif date < strptime('10/24/2016', '%m/%d/%Y'):
+			return 8
+		elif date < strptime('10/31/2016', '%m/%d/%Y'):
+			return 9
+		elif date < strptime('11/7/2016', '%m/%d/%Y'):
+			return 10
+		elif date < strptime('11/14/2016', '%m/%d/%Y'):
+			return 11
+		elif date < strptime('11/21/2016', '%m/%d/%Y'):
+			return 12
+		elif date < strptime('11/28/2016', '%m/%d/%Y'):
+			return 13
+		elif date < strptime('12/5/2016', '%m/%d'):
+			return 14
+		return 0
+
 				
 	
 	
