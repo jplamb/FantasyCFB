@@ -241,33 +241,33 @@ class Player:
 	def getWeek(self, date):
 		date = strptime(date, '%m/%d/%Y')
 		
-		if date < strptime('9/5/2016', '%m/%d/%Y'):
+		if date <= strptime('9/5/2016', '%m/%d/%Y'):
 			return 1
-		elif date < strptime('9/12/2016', '%m/%d/%Y'):
+		elif date <= strptime('9/12/2016', '%m/%d/%Y'):
 			return 2
-		elif date < strptime('9/19/2016', '%m/%d/%Y'):
+		elif date <= strptime('9/19/2016', '%m/%d/%Y'):
 			return 3
-		elif date < strptime('9/26/2016', '%m/%d/%Y'):
+		elif date <= strptime('9/26/2016', '%m/%d/%Y'):
 			return 4
-		elif date < strptime('10/3/2016', '%m/%d/%Y'):
+		elif date <= strptime('10/3/2016', '%m/%d/%Y'):
 			return 5
-		elif date < strptime('10/10/2016', '%m/%d/%Y'):
+		elif date <= strptime('10/10/2016', '%m/%d/%Y'):
 			return 6
-		elif date < strptime('10/17/2016', '%m/%d/%Y'):
+		elif date <= strptime('10/17/2016', '%m/%d/%Y'):
 			return 7
-		elif date < strptime('10/24/2016', '%m/%d/%Y'):
+		elif date <= strptime('10/24/2016', '%m/%d/%Y'):
 			return 8
-		elif date < strptime('10/31/2016', '%m/%d/%Y'):
+		elif date <= strptime('10/31/2016', '%m/%d/%Y'):
 			return 9
-		elif date < strptime('11/7/2016', '%m/%d/%Y'):
+		elif date <= strptime('11/7/2016', '%m/%d/%Y'):
 			return 10
-		elif date < strptime('11/14/2016', '%m/%d/%Y'):
+		elif date <= strptime('11/14/2016', '%m/%d/%Y'):
 			return 11
-		elif date < strptime('11/21/2016', '%m/%d/%Y'):
+		elif date <= strptime('11/21/2016', '%m/%d/%Y'):
 			return 12
-		elif date < strptime('11/28/2016', '%m/%d/%Y'):
+		elif date <= strptime('11/28/2016', '%m/%d/%Y'):
 			return 13
-		elif date < strptime('12/5/2016', '%m/%d'):
+		elif date <= strptime('12/5/2016', '%m/%d'):
 			return 14
 		return 0
 

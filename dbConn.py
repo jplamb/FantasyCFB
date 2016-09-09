@@ -11,11 +11,11 @@ def open_db_connection(dict):
 	global db
 	global cursor
 	db = MySQLdb.connect('localhost', 'appuser', base64.b64decode('YXBwdXNlcg=='), 'ffbdev')
-	
+
 	if not dict:
 		cursor = db.cursor()
 	else:
-		cursor = db.cursor(dictionary=True)
+		cursor = db.cursor(cursorclass=MySQLdb.cursors.DictCursor)
 	
 # close db connection to ffbdev and commit
 def close_db():
@@ -62,3 +62,10 @@ def db_dict_execute(sql):
 	close_db()
 	
 	return result
+
+#class MySqlCursorDict(mysql.connector.cursor.MySQLCursor):
+#	def _row_to_python(self, rowdata, desc=None):
+#		row = super(MySqlCursorDict, self)._row_to_python(rowdata, desc)
+#		if row:
+#			return dict(zip(self.column_names, row))
+#		return None
