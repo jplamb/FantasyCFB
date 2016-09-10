@@ -1,7 +1,7 @@
 # Calculate player points
 from dbConn import db_execute, db_dict_execute, check_table_exists
 # Main method
-def calc_all_player_points():
+def calc_all_player_points(week):
     
     # check if both the points for stat and player points tables exists
     if not check_table_exists('points_stats'):
@@ -21,14 +21,17 @@ def calc_all_player_points():
         player = player[0]
 
         total_points = 0
-        week = 1
+
         game_log = get_player_game_log(player, week)
 
         if not game_log:
             continue
-
+        print player
+        
         for stat in game_log.keys():
-            if stat in points_stats:
+            if stat in points_stats and game_log[stat]:
+                if isinstance(game_log[stat], basestring):
+                    game_log[stat] = float(game_log[stat].split('/')[0])
                 total_points += points_stats[stat] * game_log[stat]
                 #print stat, points_stats[stat], game_log[stat], total_points
                 
@@ -247,6 +250,7 @@ def create_points__stats_table():
             """
     db_execute(create_string)
 
-calc_all_player_points()
+week = 1
+calc_all_player_points(week)
 teams = ['Team_John_B', 'Team_Jack', 'Team_John_L', 'Team_Mike','Team_Scott','Team_Frankie']
 post_team_points(teams, 1)

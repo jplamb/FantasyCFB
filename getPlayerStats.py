@@ -115,16 +115,17 @@ def cleanse_game_log(log):
 	# Convert all stats to floats
 	for row in range(1,len(log)):
 		for stat in range(3, num_of_cols):
-			
+
 			# Check if stat contains slash, indicates player is a kicker
 			if "/" in str(log[row][stat]):
-				log[row][stat] = float(log[row][stat].replace("/", ""))
+				#log[row][stat] = float(log[row][stat].replace("/", ""))
+				log[row][stat] = str(log[row][stat])
 			# Remove dashes in stat and set to zero
 			elif "-" in str(log[row][stat]):
 				log[row][stat] = 0.0
 			else:
 				log[row][stat] = float(log[row][stat])
-	
+
 	# Remove non ascii character
 	for row in range(1,len(log)):
 		for stat in range(0,3):
@@ -144,3 +145,4 @@ def print_game_log(log):
 		for stat in row:
 			print stat,
 		print "\n"
+		

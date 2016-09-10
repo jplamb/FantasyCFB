@@ -109,18 +109,20 @@ def con_get_player_stats():
 			from players 
 			"""
 	result = db_execute(sql)
-	
+	count = 1
+	total = len(result)
+
 	for player in result:
 		name = player[0]
 		id = player[1]
 		url = player[2]
 		
 		play_game_log = get_player_stats(url)
-		print name
+		print str(count) + ' / ' + str(total) + '  ' + name
 		if play_game_log:
 			temp_player = Player.Player(name, id, url)
 			temp_player.set_stats(play_game_log)
-	
+		count += 1
 	"""
 	for url in urls:
 		#print url
