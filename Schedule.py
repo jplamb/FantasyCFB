@@ -95,7 +95,6 @@ class Schedule:
 				time_raw = row.find_all('td')[2].contents[0].strip()
 				time.append(time_raw)
 		
-			
 		# Record schedule by row
 		for count, game in enumerate(opponent):
 			self.record_schedule(date[count], opponent[count], status[count], time[count], opp_id[count])
@@ -254,8 +253,6 @@ class Schedule:
 		teams = db_execute(sql)
 		
 		return teams
-		
-		
 		
 		
 		

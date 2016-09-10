@@ -31,10 +31,14 @@ def calc_all_player_points(week):
         for stat in game_log.keys():
             if stat in points_stats and game_log[stat]:
                 if isinstance(game_log[stat], basestring):
-                    game_log[stat] = float(game_log[stat].split('/')[0])
+                    game_log[stat] = float(game_log[stat].split('/')[0]) 
                 total_points += points_stats[stat] * game_log[stat]
                 #print stat, points_stats[stat], game_log[stat], total_points
-                
+        
+        if game_log['fg_made'] and len(game_log['fg_made']) > 1:
+            (made, att) = game_log['fg_made'].split('/')
+            total_points += (float(att) - float(made)) * points_stats['fg_miss']
+            
         points_elig = get_player_elig(player, week)
         
         elig_points = 0
@@ -46,6 +50,127 @@ def calc_all_player_points(week):
             unelig_points = total_points
             
         handle_player_points(player, week, total_points, elig_points, unelig_points)
+
+def calc_team_def_points(week):
+    # check if both the points for stat and player points tables exists
+    if not check_table_exists('points_stats'):
+        create_points_stats_table()
+    if not check_table_exists('points'):
+        create_points_table()
+        
+    # retrieve the points for stats table (as dict)
+    points_stats = get_points_stats_table()[0]
+    
+    teams = get_teams()
+
+    for team, team_id in teams:
+        print team
+        total_points = 0
+        
+        game_results = get_team_result(team, week)
+        
+        if not game_results:
+            continue
+        
+        game_result, opp = game_results[0]
+
+        for x in range(len(game_results)):
+            if '-' not in game_result:
+                game_result, opp = game_results[x]
+            else:
+                break
+        
+        (points_all1, points_all2) = game_result.split('-')
+        victory = ''
+        while victory != 'Y' and victory != 'N':
+            victory = raw_input('Did %s win?\n'%(team)).strip().upper()
+        
+        if victory == 'Y':
+            points_all = points_all2
+        else:
+            points_all = points_all1
+
+        if points_all == 0:
+            total_points = points_stats['points_all_0']
+        elif points_all <= 6:
+            total_points = points_stats['points_all_6']
+        elif points_all <= 13:
+            total_points = points_stats['points_all_13']
+        elif points_all <= 17:
+            total_points = points_stats['points_all_17']
+        elif points_all <= 27:
+            total_points = points_stats['points_all_27']
+        elif points_all <= 34:
+            total_points = points_stats['points_all_34']
+        elif points_all <= 45:
+            total_points = points_stats['points_all_45']
+        else:
+            total_points = points_stats['points_all_plus']
+        
+        int_caught = float(get_interceptions(team)[0][0])
+        sacks = float(get_sacks(team)[0][0])
+        fumbles = float(get_forced_fumbles(team)[0][0])
+        print int_caught, type(int_caught)
+        
+        if int_caught:
+            total_points += int_caught * points_stats['def_int']
+        if sacks:
+            total_points += sacks * points_stats['def_sacks']
+        if fumbles:
+            total_points += fumbles * points_stats['def_force_fmble']
+        
+        ePoints = 0
+        uPoints = 0
+        
+        team_elig = get_team_elig(team, week)
+        
+        if team_elig:
+            ePoints = total_points
+        else:
+            uPoints = total_points
+        print team + ' saving'
+        handle_player_points(team_id, week, total_points, ePoints, uPoints)
+        
+def get_forced_fumbles(team):
+    select_sql = """
+            select sum(def_force_fmble) from player_stats where player_id in
+            (select player_id from players where team = '%s' and position <> 'QB')
+            """%(team)
+    return db_execute(select_sql)
+
+def get_interceptions(team):
+    select_sql = """
+            select sum(int_thrown) from player_stats where player_id in
+            (select player_id from players where team = '%s' and position <> 'QB')
+            """%(team)
+    return db_execute(select_sql)
+
+def get_sacks(team):
+    select_sql = """
+            select sum(def_sacks) from player_stats where player_id in
+            (select player_id from players where team = '%s' and position <> 'QB')
+            """%(team)
+    return db_execute(select_sql)
+        
+def get_team_result(team, week):
+    select_sql = """
+            select result,opp from player_stats where player_id in
+            (select player_id from players where team = '%s') and week = %s
+            """%(team, week)
+    return db_execute(select_sql)
+
+def get_team_victory(team, week, opp):
+    select_sql = """
+            select status from schedule where team = '%s'
+            and opp = '%s'
+            """%(team, opp)
+    return db_execute(select_sql)
+    
+def get_teams():
+    select_sql = """
+            select team, team_id from teams
+            """
+    return db_execute(select_sql)
 
 def post_team_points(teams, week):
     for team in teams:
@@ -71,7 +196,14 @@ def print_team_points(result, team):
         f.write('\n%s, %s, %s, %s, %s, %s'%(player[0], player[1], player[2], player[3], player[4], team))
     f.close()
 
-
+def get_team_elig(team, week):
+    select_sql = """
+                select (1) from player_stats where week = %s and player_id in
+                (select player_id from players where team = '%s') and opp in
+                (select team from teams)
+                """%(week, team)
+    return db_execute(select_sql)
+                
 def get_player_elig(player_id, week):
     select_sql = """
                 select (1) from player_stats
@@ -108,7 +240,7 @@ def handle_player_points(player_id, week, tPoints, ePoints, uPoints):
             select (1) from points
             where player_id = %s and week = %s
             """%(player_id, week)
-    
+
     if not db_execute(check_row_sql):
         insert_player_points(player_id, week, tPoints, ePoints, uPoints)
     else:
@@ -226,7 +358,7 @@ def create_points__stats_table():
 			fg_30_39 float not null default 0,
 			fg_40_49 float not null default 0,
 			fg_50_plus float not null default 0,
-			fg_made float not null default 0,
+			fg_miss float not null default 0,
 			fg_pct float not null default 0,
 			fg_long float not null default 0,
 			xp_made float not null default 0,
@@ -246,11 +378,21 @@ def create_points__stats_table():
 			punt_avg float not null default 0,
 			punt_long float not null default 0,
 			punt_total_yrds float not null default 0,
+            points_all_0 float not null default 0,
+            points_all_6 float not null default 0,
+            points_all_13 float not null default 0,
+            points_all_17 float not null default 0,
+            points_all_27 float not null default 0,
+            points_all_34 float not null default 0,
+            points_all_45 float not null default 0,
+            points_all_plus float not null default 0,
+            def_int float not null default 0,
 			primary key (effdt))
             """
     db_execute(create_string)
 
 week = 1
-calc_all_player_points(week)
+#calc_all_player_points(week)
 teams = ['Team_John_B', 'Team_Jack', 'Team_John_L', 'Team_Mike','Team_Scott','Team_Frankie']
-post_team_points(teams, 1)
+#post_team_points(teams, 1)
+calc_team_def_points(week)
