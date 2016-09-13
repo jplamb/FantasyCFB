@@ -14,10 +14,8 @@ def calc_all_player_points(week):
 
     # retrieve all player ids
     player_ids = get_player_ids()
-
     # for each player, calculate points
     for player in player_ids:
-
         player = player[0]
 
         total_points = 0
@@ -35,7 +33,7 @@ def calc_all_player_points(week):
                 total_points += points_stats[stat] * game_log[stat]
                 #print stat, points_stats[stat], game_log[stat], total_points
         
-        if game_log['fg_made'] and len(game_log['fg_made']) > 1:
+        if game_log['fg_made'] and len(game_log['fg_made']) > 1 and '/' in game_log['fg_made']:
             (made, att) = game_log['fg_made'].split('/')
             total_points += (float(att) - float(made)) * points_stats['fg_miss']
             
@@ -77,10 +75,12 @@ def calc_team_def_points(week):
         for x in range(len(game_results)):
             if '-' not in game_result:
                 game_result, opp = game_results[x]
-            else:
-                break
+
         
+        if '-' not in game_result:
+            continue
         (points_all1, points_all2) = game_result.split('-')
+        
         victory = ''
         while victory != 'Y' and victory != 'N':
             victory = raw_input('Did %s win?\n'%(team)).strip().upper()
@@ -89,7 +89,7 @@ def calc_team_def_points(week):
             points_all = points_all2
         else:
             points_all = points_all1
-
+            
         if points_all == 0:
             total_points = points_stats['points_all_0']
         elif points_all <= 6:
@@ -179,16 +179,25 @@ def post_team_points(teams, week):
                 from points pt
                 inner join players play on play.player_id = pt.player_id
                 inner join %s x on x.player_name = play.name and play.team = x.team
-                where pt.week = %s
+                where pt.week = %s                
                 """%(team, week)
                 
         result = db_execute(select_sql)
         print team
         print_team_points(result, team)
+        select_sql = """
+                select x.player_name, pt.player_id,pt.total_points, x.is_starting, x.points_elig
+                from %s x
+                inner join teams tm on tm.team = x.player_name
+                inner join points pt on pt.player_id = tm.team_id
+                where x.pos = 'D' and pt.week = %s
+                """%(team, week)
+        result = db_execute(select_sql)
+        print_team_points(result, team)
     
 def print_team_points(result, team):
-    filename = team + 'stats.txt'
-    f = open(filename,'w')
+    filename = 'week2.txt'
+    f = open(filename,'a')
     
     f.write('Player, Player ID, Total Points, Starting, Eligible')
 
@@ -391,8 +400,8 @@ def create_points__stats_table():
             """
     db_execute(create_string)
 
-week = 1
+#week = 1
 #calc_all_player_points(week)
-teams = ['Team_John_B', 'Team_Jack', 'Team_John_L', 'Team_Mike','Team_Scott','Team_Frankie']
+#teams = ['Team_John_B', 'Team_Jack', 'Team_John_L', 'Team_Mike','Team_Scott','Team_Frankie']
 #post_team_points(teams, 1)
-calc_team_def_points(week)
+#calc_team_def_points(week)

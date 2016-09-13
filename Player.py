@@ -7,7 +7,7 @@
 import MySQLdb
 import base64
 from dbConn import *
-from time import strptime
+from datetime import datetime
 
 # Player class interfaces with database to retrieve and store data
 class Player:
@@ -39,36 +39,36 @@ class Player:
 	# Input: player's gamelog
 	# Returns: 
 	def set_stats(self, gamelog):
-		week = self.getWeek(gamelog[1][0])
 		# Make sure the table exists first
 		if not check_table_exists(self.table_name):
 			self.create_player_stats_table(self.table_name)			
-		
 		# Base string for insert statement
 		insert_sql_cols = 'insert into %s (player_id, player_name, week,' % self.table_name
 
 		# Generate insert statement base with columns
 		for colname in gamelog[0]:
 			insert_sql_cols += self.get_corres_col_name(str(colname).replace(" ","_").lower()) + ','
-		insert_sql_cols = insert_sql_cols[:-1] + """) values (%s, '%s', %s,""" %(self.ID, self.name, week)
-		
-		
+		insert_sql_cols = insert_sql_cols[:-1] + """) values (%s, '%s',""" %(self.ID, self.name)
+	
 		# Generate SQL insert/update statements for each row in gamelog
 		# Loop through each row in the gamelog except header row
 		for row in range(1,len(gamelog)):
-			
+
+			week = gamelog[row][0]
+			week = self.getWeek(week)
+
 			# SQL to check if row already exists in db
 			row_check = """select (1)
-						from %s 
+						from player_stats 
 						where player_id = %s and 
 						week = %s """ 
 			
 			# Set update/insert base sql strings
 			update_sql = """update %s set """ % self.table_name
-			insert_sql = insert_sql_cols
+			insert_sql = insert_sql_cols + "%s,"%(week)
 			
 			# Execute row check
-			row_check = row_check % (self.table_name, self.ID, week)
+			row_check = row_check % (self.ID, week)
 			
 			
 			# If already in db, run update
@@ -239,35 +239,36 @@ class Player:
 		db_execute(create_string)
 		
 	def getWeek(self, date):
-		date = strptime(date, '%m/%d/%Y')
-		
-		if date <= strptime('9/5/2016', '%m/%d/%Y'):
+		(month, day, year) = date.split('/')
+		date = datetime(int(year), int(month), int(day))
+
+		if date <= datetime(2016, 9, 5):
 			return 1
-		elif date <= strptime('9/12/2016', '%m/%d/%Y'):
+		elif date <= datetime(2016, 9, 12):
 			return 2
-		elif date <= strptime('9/19/2016', '%m/%d/%Y'):
+		elif date <= datetime(2016, 9, 19):
 			return 3
-		elif date <= strptime('9/26/2016', '%m/%d/%Y'):
+		elif date <= datetime(2016, 9, 26):
 			return 4
-		elif date <= strptime('10/3/2016', '%m/%d/%Y'):
+		elif date <= datetime(2016, 10, 3):
 			return 5
-		elif date <= strptime('10/10/2016', '%m/%d/%Y'):
+		elif date <= datetime(2016, 10, 10):
 			return 6
-		elif date <= strptime('10/17/2016', '%m/%d/%Y'):
+		elif date <= datetime(2016, 10, 17):
 			return 7
-		elif date <= strptime('10/24/2016', '%m/%d/%Y'):
+		elif date <= datetime(2016, 10, 24):
 			return 8
-		elif date <= strptime('10/31/2016', '%m/%d/%Y'):
+		elif date <= datetime(2016, 10, 31):
 			return 9
-		elif date <= strptime('11/7/2016', '%m/%d/%Y'):
+		elif date <= datetime(2016, 11, 7):
 			return 10
-		elif date <= strptime('11/14/2016', '%m/%d/%Y'):
+		elif date <= datetime(2016, 11, 14):
 			return 11
-		elif date <= strptime('11/21/2016', '%m/%d/%Y'):
+		elif date <= datetime(2016, 11, 21):
 			return 12
-		elif date <= strptime('11/28/2016', '%m/%d/%Y'):
+		elif date <= datetime(2016, 11, 28):
 			return 13
-		elif date <= strptime('12/5/2016', '%m/%d'):
+		elif date <= datetime(2016, 12, 5):
 			return 14
 		return 0
 

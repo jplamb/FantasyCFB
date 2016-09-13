@@ -65,7 +65,6 @@ def get_player_stats(url):
 			else:
 				# Steps through each stat in the row
 				for child in sibling.children:
-				
 					# Standard row
 					if child.string is not None and child.string != "":
 						row_data.append(child.string.strip())
@@ -74,11 +73,9 @@ def get_player_stats(url):
 						for tag in child:
 							if tag.string is not None and tag.name == 'a' and tag.string != "":
 								row_data.append(tag.string)
-	
 		# If row has data, add
 		if len(row_data) > 0:
 			game_log.append(row_data)
-		
 	return cleanse_game_log(game_log)
 
 # Add zero values to prepr for database storage
@@ -134,7 +131,7 @@ def cleanse_game_log(log):
 	# Add year to game date
 	for row in range(1,len(log)):
 		log[row][0] += "/" + str(datetime.datetime.now().year)
-
+		
 	return log
 	
 # Print game log

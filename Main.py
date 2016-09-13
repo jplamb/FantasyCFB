@@ -14,6 +14,7 @@ import datetime
 from dbConn import db_execute
 from teams import record_team
 import Roster
+from calcPoints import calc_all_player_points, calc_team_def_points, post_team_points
 
 # Run console 
 # inputs actions as list of choices (strs)
@@ -66,7 +67,8 @@ def perform_action(command):
 				3 : 'con_update_schedule',
 				4 : 'con_print_schedule',
 				5 : 'con_print_players',
-				6 : 'con_update_rosters'
+				6 : 'con_update_rosters',
+				7 : 'con_calculate_points'
 				}
 	
 	possibles = globals().copy()
@@ -109,9 +111,10 @@ def con_get_player_stats():
 			from players 
 			"""
 	result = db_execute(sql)
+	#result = [['Jerod Evans', '556465','http://www.espn.com/college-football/player/_/id/556465/jerod-evans']]
 	count = 1
 	total = len(result)
-
+	
 	for player in result:
 		name = player[0]
 		id = player[1]
@@ -182,6 +185,17 @@ def con_post_team_stats():
 			#temp_player = Player()
 			#temp_player.get_points()
 			#temp_team.set_player_points(week, player)
+
+def con_calculate_points():
+	teams = ['Team_John_B', 'Team_Jack', 'Team_John_L', 'Team_Mike', 'Team_Scott', 'Team_Frankie']
+	 
+	week = int(raw_input('What week is it? \n'))
+	
+	calc_all_player_points(week)
+	calc_team_def_points(week)
+	
+	post_team_points(teams, week)
+	
 	
 # Set test data
 #test_player_link = "http://espn.go.com/college-football/player/_/id/530541/brenden-motley"
@@ -194,7 +208,8 @@ action_choice = ['Retrieve players',
 				 'Retrieve team schedule',
 				 'Print schedule',
 				 'Print players',
-				 'Update Rosters']
+				 'Update Rosters',
+				 'Calculate Points']
 print datetime.datetime.now().time()
 
 # run console
