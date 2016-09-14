@@ -75,10 +75,14 @@ def calc_team_def_points(week):
         for x in range(len(game_results)):
             if '-' not in game_result:
                 game_result, opp = game_results[x]
-
         
-        if '-' not in game_result:
-            continue
+        x = 0
+        while x < len(game_results) and '-' not in game_result:
+            game_result, opp = game_results[x]
+            print game_result
+            x+=1
+        #if '-' not in game_result:
+        #    continue
         (points_all1, points_all2) = game_result.split('-')
         
         victory = ''

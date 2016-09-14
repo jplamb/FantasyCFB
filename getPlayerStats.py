@@ -112,7 +112,7 @@ def cleanse_game_log(log):
 	# Convert all stats to floats
 	for row in range(1,len(log)):
 		for stat in range(3, num_of_cols):
-
+			
 			# Check if stat contains slash, indicates player is a kicker
 			if "/" in str(log[row][stat]):
 				#log[row][stat] = float(log[row][stat].replace("/", ""))
@@ -125,7 +125,7 @@ def cleanse_game_log(log):
 
 	# Remove non ascii character
 	for row in range(1,len(log)):
-		for stat in range(0,3):
+		for stat in range(0,2):
 			log[row][stat] = ''.join((c for c in log[row][stat] if 0 < ord(c) < 128))
 	
 	# Add year to game date
