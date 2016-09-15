@@ -1,5 +1,7 @@
 # Calculate player points
 from dbConn import db_execute, db_dict_execute, check_table_exists
+import os
+
 # Main method
 def calc_all_player_points(week):
     
@@ -48,6 +50,8 @@ def calc_all_player_points(week):
             unelig_points = total_points
             
         handle_player_points(player, week, total_points, elig_points, unelig_points)
+        
+        print_all_points(week)
 
 def calc_team_def_points(week):
     # check if both the points for stat and player points tables exists
@@ -114,7 +118,6 @@ def calc_team_def_points(week):
         int_caught = float(get_interceptions(team)[0][0])
         sacks = float(get_sacks(team)[0][0])
         fumbles = float(get_forced_fumbles(team)[0][0])
-        print int_caught, type(int_caught)
         
         if int_caught:
             total_points += int_caught * points_stats['def_int']
@@ -138,21 +141,24 @@ def calc_team_def_points(week):
 def get_forced_fumbles(team):
     select_sql = """
             select sum(def_force_fmble) from player_stats where player_id in
-            (select player_id from players where team = '%s' and position <> 'QB')
+            (select player_id from players where team = '%s' and (position <> 'QB'
+            or position is NULL))
             """%(team)
     return db_execute(select_sql)
 
 def get_interceptions(team):
     select_sql = """
             select sum(int_thrown) from player_stats where player_id in
-            (select player_id from players where team = '%s' and position <> 'QB')
+            (select player_id from players where team = '%s' and (position <> 'QB'
+            or position is null))
             """%(team)
     return db_execute(select_sql)
 
 def get_sacks(team):
     select_sql = """
             select sum(def_sacks) from player_stats where player_id in
-            (select player_id from players where team = '%s' and position <> 'QB')
+            (select player_id from players where team = '%s' and (position <> 'QB'
+            or position is null))
             """%(team)
     return db_execute(select_sql)
         
@@ -183,6 +189,7 @@ def post_team_points(teams, week):
                 from points pt
                 inner join players play on play.player_id = pt.player_id
                 inner join %s x on x.player_name = play.name and play.team = x.team
+                and x.week = pt.week
                 where pt.week = %s                
                 """%(team, week)
                 
@@ -193,17 +200,18 @@ def post_team_points(teams, week):
                 select x.player_name, pt.player_id,pt.total_points, x.is_starting, x.points_elig
                 from %s x
                 inner join teams tm on tm.team = x.player_name
-                inner join points pt on pt.player_id = tm.team_id
+                inner join points pt on pt.player_id = tm.team_id and x.week = pt.week
                 where x.pos = 'D' and pt.week = %s
                 """%(team, week)
         result = db_execute(select_sql)
-        print_team_points(result, team)
+        print_team_points(result, team, week)
     
-def print_team_points(result, team):
-    filename = 'week2.txt'
+def print_team_points(result, team, week):
+    filename = 'week' + str(week) + '.txt'
     f = open(filename,'a')
     
-    f.write('Player, Player ID, Total Points, Starting, Eligible')
+    if os.path.isfile(filename) and os.path.getsize(filename) == 0:
+        f.write('Player, Player ID, Total Points, Starting, Eligible')
 
     for player in result:
         f.write('\n%s, %s, %s, %s, %s, %s'%(player[0], player[1], player[2], player[3], player[4], team))
@@ -404,8 +412,24 @@ def create_points__stats_table():
             """
     db_execute(create_string)
 
-#week = 1
-#calc_all_player_points(week)
-#teams = ['Team_John_B', 'Team_Jack', 'Team_John_L', 'Team_Mike','Team_Scott','Team_Frankie']
-#post_team_points(teams, 1)
-#calc_team_def_points(week)
+def print_all_points(week):
+    select_sql = """
+            select * from points pt
+            inner join player_stats st on st.player_id = pt.player_id and pt.week = st.week
+            where pt.week = %s
+            """%(week)
+    
+    results = db_execute(select_sql)
+    
+    filename = 'week' + str(week) + 'allstats.txt'
+    f = open(filename,'w')
+    
+    if os.path.isfile(filename) and os.path.getsize(filename) == 0:
+        f.write('Week, Player ID, Total Points, Elig Points, Unelig Points, week, player id, Game Date, Player Name, Opponent, Result, Pass Compl, Pass Att, Pass Yards, Compl Pct, Pass Long, Pass TD, Int Thrown, Pass Rate, Raw QBR, Adj QBR, Rush Att, Rush Yards, Rush Avg, Rush Long, Rush TD, Rec Receptions, Rec Yards, Rec Avg, Rec Long, Rec TD, FG 1-19, FG 20-29, FG 30-39, FG 40-49, FG 50+, FG Made, FG Pct, FG Long, XP Made, XP Att, Kick Points, Def Tackles, Def Unassist Tackles, Def Ass Tackles, Def Sacks, Def Forced Fumbles, Def Int Ret Yards, Def Int Ret Avg, Def Int Ret Long, Def Int Ret TD, Def Pass Defend, Punt Total, Punt Avg, Punt Total, Punt Total Yards')
+    for row in results:
+        f.write('\n')
+        for stat in row:
+            f.write('%s, '%(stat))
+    f.close()
+    
+    
