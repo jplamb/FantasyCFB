@@ -37,6 +37,7 @@ class Schedule:
 				gm_time time,
 				status varchar(4),
 				power_five varchar(1),
+				win_loss varchar(3),
 				primary key(team, gm_date)
 				)""" % table_name
 		
@@ -61,6 +62,7 @@ class Schedule:
 		opponent = []
 		opp_id = []
 		status = []
+		win_loss_list = []
 		
 		# Loop through all rosters in list
 
@@ -73,7 +75,7 @@ class Schedule:
 		schedule_block = soup.find(id="showschedule")
 		grid_rows_soup = BeautifulSoup(str(schedule_block), 'lxml')
 		grid_rows = grid_rows_soup.find_all("tr")
-		
+		print self.team
 		for row in grid_rows:
 			if 'stathead' not in row['class'] and 'colhead' not in row['class'] :
 				cur_date = row.td.string
@@ -85,23 +87,35 @@ class Schedule:
 					status.append('home')
 				else:
 					status.append('away')
-					
+
 				opp_name = row.find(attrs={"class": "team-name"})
-				opponent.append(opp_name.a.string)
+				opponent.append(opp_name.a.string.replace("'", ''))
 				
 				opp_id_raw = opp_name.a['href']
 				opp_id.append(opp_id_raw.split('/')[-2])
 				
-				time_raw = row.find_all('td')[2].contents[0].strip()
+				win_loss = row.find(attrs={"class": re.compile("win|loss")})
+
+				if win_loss:
+					if win_loss.string == 'W':
+						win_loss = 'W'
+					else:
+						win_loss = 'L'
+					time_raw = 'NA'
+				else:
+					win_loss = 'NA'
+					time_raw = row.find_all('td')[2].contents[0].string
+				win_loss_list.append(win_loss)
+
 				time.append(time_raw)
-		
+
 		# Record schedule by row
 		for count, game in enumerate(opponent):
-			self.record_schedule(date[count], opponent[count], status[count], time[count], opp_id[count])
+			self.record_schedule(date[count], opponent[count], status[count], time[count], opp_id[count], win_loss_list[count])
 	
 	# Handle schedule updates
 	# input date as string, opp as string, status as string, and time as string
-	def record_schedule(self, date, opp, status, time, opp_id):
+	def record_schedule(self, date, opp, status, time, opp_id, victory):
 		
 		opp_power_five = self.is_power_five_team(opp_id)
 		
@@ -113,32 +127,34 @@ class Schedule:
 			""" % (self.team, date)
 		
 		if db_execute(row_exists_sql):
-			self.update_schedule(date, opp, status, time, opp_power_five)
+			self.update_schedule(date, opp, status, time, opp_power_five, victory)
 		else:
-			self.insert_schedule(date, opp, status, time, opp_power_five)
+			self.insert_schedule(date, opp, status, time, opp_power_five, victory)
 		
 	# Insert schedule into table
 	# inputs: date as formatted string, opp as string, status as string, and time as string
-	def insert_schedule(self, date, opp, status, time, opp_power):
+	def insert_schedule(self, date, opp, status, time, opp_power, victory):
 		
 		# check if time is TBD or not
-		if time == 'TBD':
+		if time == 'TBD' or time == 'NA':
 			insert_sql = """
 				insert into schedule (
 				team,
 				gm_date,
 				opp,
 				status,
-				power_five
+				power_five,
+				win_loss
 				)
 				values (
 				'%s',
 				str_to_date('%s', '%%Y-%%m-%%d' ),
 				'%s',
 				'%s',
+				'%s',
 				'%s'
 				)
-				""" %(self.team, date, opp, status, opp_power)
+				""" %(self.team, date, opp, status, opp_power, victory)
 		else:
 			insert_sql = """
 				insert into schedule (
@@ -147,7 +163,8 @@ class Schedule:
 				opp,
 				gm_time,
 				status,
-				power_five
+				power_five,
+				win_loss
 				)
 				values (
 				'%s',
@@ -155,27 +172,29 @@ class Schedule:
 				'%s',
 				time_format('%s', '%%h:%%i %%p'),
 				'%s',
+				'%s',
 				'%s'
 				)
-				""" %(self.team, date, opp, time, status, opp_power)
+				""" %(self.team, date, opp, time, status, opp_power, victory)
 		print insert_sql
 		db_execute(insert_sql)
 	
 	# Update schedule row in table
 	# inputs: date as formatted string, opp as string, status as string, and time as string
-	def update_schedule(self, date, opp, status, time, opp_power):
+	def update_schedule(self, date, opp, status, time, opp_power, victory):
 		
-		if time == 'TBD':
+		if time == 'TBD' or time == 'NA':
 			update_sql = """
 				update schedule 
 				set 
 				opp = '%s',
 				status = '%s',
-				power_five = '%s'
+				power_five = '%s',
+				win_loss = '%s'
 				where
 				team = '%s' and
 				gm_date = str_to_date('%s', '%%Y-%%m-%%d' )
-				""" % (opp, status, opp_power, self.team, date)
+				""" % (opp, status, opp_power, victory, self.team, date)
 		else:
 			update_sql = """
 				update schedule 
@@ -183,11 +202,12 @@ class Schedule:
 				opp = '%s',
 				gm_time = time_format('%s', '%%h:%%i %%p'),
 				status = '%s',
-				power_five = '%s'
+				power_five = '%s',
+				win_loss = '%s'
 				where
 				team = '%s' and
 				gm_date = str_to_date('%s', '%%Y-%%m-%%d' )
-				""" % (opp, time, status, opp_power, self.team, date)		
+				""" % (opp, time, status, opp_power, victory, self.team, date)		
 		print update_sql
 		db_execute(update_sql)
 		

@@ -194,7 +194,7 @@ def con_calculate_points():
 	calc_all_player_points(week)
 	calc_team_def_points(week)
 	
-	post_team_points(teams, week)
+	post_team_points(week)
 	
 	
 # Set test data

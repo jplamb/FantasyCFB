@@ -14,7 +14,8 @@ class Roster:
 		self.team_name = team_name
 		self.team_players_strt  = self.get_team_players(True)
 		self.team_players_bnch = self.get_team_players(False)
-		self.table_name = team_name.replace(' ', '_')
+		#self.table_name = team_name.replace(' ', '_')
+		self.table_name = 'roster'
 		
 		if not check_table_exists(self.table_name):
 			self.create_team_roster()
@@ -24,8 +25,9 @@ class Roster:
 	# create roster table
 	def create_team_roster(self):
 		
-		create_string = """ create table %s (
+		create_string = """ create table roster (
 				week int not null,
+				fant_team varchar(30) not null,
 				player_name varchar(20) not null,
 				pos varchar(2),
 				is_starting varchar(1) not null,
@@ -33,8 +35,8 @@ class Roster:
 				points float,
 				team varchar(20),
 				opp varchar(20),
-				primary key (week, player_name)
-				)""" % self.table_name
+				primary key (week, fant_team, player_name)
+				)""" % (self.table_name)
 		db_execute(create_string)
 	
 	# interface with google sheet to pull in roster
@@ -51,8 +53,8 @@ class Roster:
 	def update_roster(self, week):
 		delete_sql = """
 			delete from %s
-			where week = %s
-			""" %(self.table_name, week)
+			where week = %s and fant_team = '%s'
+			""" %(self.table_name, week, self.team_name)
 		
 		db_execute(delete_sql)
 		
@@ -90,10 +92,10 @@ class Roster:
 			
 		insert_sql = """
 				insert into %s
-				(week, player_name, points_elig, points, pos, is_starting, team, opp)
+				(week, fant_team, player_name, points_elig, points, pos, is_starting, team, opp)
 				values
-				(%s, '%s', '%s', 0, '%s', '%s', '%s','%s')
-				"""%(self.table_name, week, player_nm, points_elig,  pos, starting, team, opp)
+				(%s, '%s', '%s', '%s', 0, '%s', '%s', '%s','%s')
+				"""%(self.table_name, week, self.team_name, player_nm, points_elig,  pos, starting, team, opp)
 		db_execute(insert_sql)
 
 			

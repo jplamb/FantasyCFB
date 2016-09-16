@@ -182,39 +182,37 @@ def get_teams():
             """
     return db_execute(select_sql)
 
-def post_team_points(teams, week):
-    for team in teams:
-        select_sql = """
-                select x.player_name, pt.player_id, pt.total_points, x.is_starting, x.points_elig
+def post_team_points(week):
+    select_sql = """
+                select x.player_name, pt.player_id, pt.total_points, x.is_starting, x.points_elig, x.fant_team
                 from points pt
                 inner join players play on play.player_id = pt.player_id
-                inner join %s x on x.player_name = play.name and play.team = x.team
+                inner join roster x on x.player_name = play.name and play.team = x.team
                 and x.week = pt.week
                 where pt.week = %s                
-                """%(team, week)
+                """%(week)
                 
-        result = db_execute(select_sql)
-        print team
-        print_team_points(result, team)
-        select_sql = """
-                select x.player_name, pt.player_id,pt.total_points, x.is_starting, x.points_elig
-                from %s x
+    result = db_execute(select_sql)
+    print_team_points(result, week)
+    select_sql = """
+                select x.player_name, pt.player_id,pt.total_points, x.is_starting, x.points_elig, x.fant_team
+                from roster x
                 inner join teams tm on tm.team = x.player_name
                 inner join points pt on pt.player_id = tm.team_id and x.week = pt.week
                 where x.pos = 'D' and pt.week = %s
-                """%(team, week)
-        result = db_execute(select_sql)
-        print_team_points(result, team, week)
+                """%(week)
+    result = db_execute(select_sql)
+    print_team_points(result, week)
     
-def print_team_points(result, team, week):
+def print_team_points(result, week):
     filename = 'week' + str(week) + '.txt'
     f = open(filename,'a')
     
     if os.path.isfile(filename) and os.path.getsize(filename) == 0:
-        f.write('Player, Player ID, Total Points, Starting, Eligible')
+        f.write('Player, Player ID, Total Points, Starting, Eligible, Fant Team')
 
     for player in result:
-        f.write('\n%s, %s, %s, %s, %s, %s'%(player[0], player[1], player[2], player[3], player[4], team))
+        f.write('\n%s, %s, %s, %s, %s, %s'%(player[0], player[1], player[2], player[3], player[4], player[5]))
     f.close()
 
 def get_team_elig(team, week):
@@ -431,5 +429,4 @@ def print_all_points(week):
         for stat in row:
             f.write('%s, '%(stat))
     f.close()
-    
     
