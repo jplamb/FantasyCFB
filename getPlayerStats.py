@@ -14,7 +14,11 @@ import re
 # Inputs: URL string to player's stat page
 # Returns: game log as list of lists
 def get_player_stats(url):
-	page = requests.get(url)
+	try:
+		page = requests.get(url)
+	except Exception as e:
+		logPlayerException(url)
+		
 	tree = html.fromstring(page.content)
 	soup = BeautifulSoup(page.content, 'lxml')
 	
@@ -142,4 +146,13 @@ def print_game_log(log):
 		for stat in row:
 			print stat,
 		print "\n"
+
+def logPlayerException(url):
+	filename = 'playerStatsError.txt'
+	f = open(filename,'a')
+	f.write('\n')
+    #if os.path.isfile(filename) and os.path.getsize(filename) == 0:
+    #    f.write('Week, Player ID, Total Points, Elig Points, Unelig Points, week, player id, Game Date, Player Name, Opponent, Result, Pass Compl, Pass Att, Pass Yards, Compl Pct, Pass Long, Pass TD, Int Thrown, Pass Rate, Raw QBR, Adj QBR, Rush Att, Rush Yards, Rush Avg, Rush Long, Rush TD, Rec Receptions, Rec Yards, Rec Avg, Rec Long, Rec TD, FG 1-19, FG 20-29, FG 30-39, FG 40-49, FG 50+, FG Made, FG Pct, FG Long, XP Made, XP Att, Kick Points, Def Tackles, Def Unassist Tackles, Def Ass Tackles, Def Sacks, Def Forced Fumbles, Def Int Ret Yards, Def Int Ret Avg, Def Int Ret Long, Def Int Ret TD, Def Pass Defend, Punt Total, Punt Avg, Punt Total, Punt Total Yards')
+	f.write('%s, '%(url))
+	f.close()
 		

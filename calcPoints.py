@@ -89,14 +89,21 @@ def calc_team_def_points(week):
         #    continue
         (points_all1, points_all2) = game_result.split('-')
         
-        victory = ''
-        while victory != 'Y' and victory != 'N':
-            victory = raw_input('Did %s win?\n'%(team)).strip().upper()
-        
-        if victory == 'Y':
-            points_all = points_all2
+        #victory = ''
+        #while victory != 'Y' and victory != 'N':
+        #    victory = raw_input('Did %s win?\n'%(team)).strip().upper()
+        victory = get_team_victory(team, opp)
+        if victory:
+            victory = victory[0][0]
         else:
+            victory = raw_input('Was %s the home team?\n'%(team)).strip().upper()
+        print victory, team, opp
+        if victory == 'home' or victory == 'Y':
+            points_all = points_all2
+        elif victory == 'away' or victory == 'N':
             points_all = points_all1
+        else:
+            points_all = 42
             
         if points_all == 0:
             total_points = points_stats['points_all_0']
@@ -169,7 +176,7 @@ def get_team_result(team, week):
             """%(team, week)
     return db_execute(select_sql)
 
-def get_team_victory(team, week, opp):
+def get_team_victory(team, opp):
     select_sql = """
             select status from schedule where team = '%s'
             and opp = '%s'
@@ -411,9 +418,11 @@ def create_points__stats_table():
     db_execute(create_string)
 
 def print_all_points(week):
+    
     select_sql = """
-            select * from points pt
+            select pt.*, st.*, rost.pos, rost.fant_team, rost.team from points pt
             inner join player_stats st on st.player_id = pt.player_id and pt.week = st.week
+            left join roster rost on rost.player_name = st.player_name and rost.week = st.week
             where pt.week = %s
             """%(week)
     
@@ -430,3 +439,4 @@ def print_all_points(week):
             f.write('%s, '%(stat))
     f.close()
     
+#calc_team_def_points(3)
