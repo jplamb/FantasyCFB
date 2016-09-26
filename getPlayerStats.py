@@ -135,7 +135,7 @@ def cleanse_game_log(log):
 	# Add year to game date
 	for row in range(1,len(log)):
 		log[row][0] += "/" + str(datetime.datetime.now().year)
-		
+	
 	return log
 	
 # Print game log

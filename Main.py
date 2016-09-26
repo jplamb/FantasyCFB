@@ -11,7 +11,7 @@ from Schedule import *
 from getPlayerStats import get_player_stats
 import Player
 import datetime
-from dbConn import db_execute
+from dbConn import db_execute, close_db, db_commit, open_db_connection
 from teams import record_team
 import Roster
 from calcPoints import calc_all_player_points, calc_team_def_points, post_team_points
@@ -125,7 +125,11 @@ def con_get_player_stats():
 		if play_game_log:
 			temp_player = Player.Player(name, id, url)
 			temp_player.set_stats(play_game_log)
+		
+		if count % 25 == 0:
+			db_commit()
 		count += 1
+	db_commit()
 	"""
 	for url in urls:
 		#print url
@@ -153,6 +157,10 @@ def con_update_schedule():
 		schedule_url = roster_urls[count].replace("roster", "schedule")
 		temp_team = Schedule(team, schedule_url)
 		temp_team.get_schedule(schedule_url)
+		
+		if count % 25 == 0:
+			db_commit()
+	db_commit()
 
 # Outputs schedule as a text file
 def con_print_schedule():
@@ -171,6 +179,7 @@ def con_update_rosters():
 	for team in teams:
 		temp_team = Roster.Roster(team)
 		temp_team.update_roster(week)
+	db_commit()
 
 # Retrieve this weeks stats and save them to roster table
 def con_post_team_stats():
@@ -214,9 +223,11 @@ print datetime.datetime.now().time()
 
 # run console
 #test_mode = run_test()
+open_db_connection(False)
 command = run_console(action_choice)
 perform_action(command)
 
+close_db()
 print 'Closing..'
 print datetime.datetime.now().time()
 

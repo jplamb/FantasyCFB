@@ -1,5 +1,5 @@
 # Calculate player points
-from dbConn import db_execute, db_dict_execute, check_table_exists
+from dbConn import db_execute, db_dict_execute, check_table_exists, db_commit
 import os
 
 # Main method
@@ -50,8 +50,9 @@ def calc_all_player_points(week):
             unelig_points = total_points
             
         handle_player_points(player, week, total_points, elig_points, unelig_points)
-        
-        print_all_points(week)
+    
+    db_commit()
+    print_all_points(week)
 
 def calc_team_def_points(week):
     # check if both the points for stat and player points tables exists
@@ -147,6 +148,7 @@ def calc_team_def_points(week):
             uPoints = total_points
         print team + ' saving'
         handle_player_points(team_id, week, total_points, ePoints, uPoints)
+    db_commit()
         
 def get_forced_fumbles(team, week):
     select_sql = """
@@ -459,4 +461,4 @@ def print_all_points(week):
             f.write('%s, '%(stat))
     f.close()
     
-print_all_points(3)
+#print_all_points(1)

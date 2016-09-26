@@ -70,7 +70,6 @@ class Player:
 			# Execute row check
 			row_check = row_check % (self.ID, week)
 			
-			
 			# If already in db, run update
 			if db_execute(row_check):
 				for count, stat in enumerate(gamelog[row]):
@@ -90,13 +89,12 @@ class Player:
 				for stat in gamelog[row]:
 					# Check if state needs to be input as string
 					if isinstance(stat, basestring):
-						stat = str(stat).translate(None, "',-_")
+						stat = str(stat).translate(None, "',_")
 						insert_sql += "'%s'," % str(stat)
 					else:
 						insert_sql += str(stat) + ','
 				insert_sql = insert_sql[:-1] + ')'
-				db_execute(insert_sql)
-													
+				db_execute(insert_sql)								
 		
 	# Maps html stat name with db column name
 	# Input: html stat column as string
