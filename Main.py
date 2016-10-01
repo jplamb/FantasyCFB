@@ -108,7 +108,7 @@ def con_get_player_stats():
 	
 	sql = """
 			select name, player_id, url
-			from players 
+			from players where player_id = 3124069
 			"""
 	result = db_execute(sql)
 	#result = [['Jerod Evans', '556465','http://www.espn.com/college-football/player/_/id/556465/jerod-evans']]
@@ -121,6 +121,7 @@ def con_get_player_stats():
 		url = player[2]
 		
 		play_game_log = get_player_stats(url)
+		quit()
 		print str(count) + ' / ' + str(total) + '  ' + name
 		if play_game_log:
 			temp_player = Player.Player(name, id, url)

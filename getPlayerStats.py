@@ -24,12 +24,44 @@ def get_player_stats(url):
 	
 	# Get the grid containing game log...asssumes this is the second grid on the page
 	#grids = soup.find_all("tr", attrs={"class": "stathead"})[1]
-	grids = soup.find_all("tr", attrs={"class": "stathead"})
+	#grids = soup.find_all("tr", attrs={"class": "stathead"})
 	
 	# Find game log grid from tags that match above criteria
-	stathead = []
+	#stathead = []
+	
+	game_log = soup.find(text='2016 Game Log')
+	if game_log:
+		stats_grid = game_log.parent.parent.parent
+	
+	if not stats_grid:
+		print 'no stats'
+	stats_grid_soup = BeautifulSoup(str(stats_grid), 'lxml')
+	
+	stat_rows = stats_grid_soup.find_all('tr')
+	stats = {}
+	for row in stat_rows:
+		if 'stathead' in row['class']:
+			if str(row).find('Receiving') <> -1:
+				pass
+		elif 'colhead' in row['class']:
+			catsInfo = [x.string for x in row.find_all('td', attrs = {'class': None})]
+			catsStats = [x['title'] for x in row.find_all('td', {'title': True})]
+			catsInfo.insert(2,'victory')
+			print catsInfo
+			print catsStats
+			count = 0
+			for cat in catsInfo + catsStats:
+				stats[cat] = [x.get_text('\n', strip=True).split('\n')[count] for x in stat_rows[2:]]
+				#this works, but there's no validation on inputs
+				#it doesn't work for home vs away since the list size varies
+				# need to figure out how to insert a home indicator or remove away indicator
+				count += 1
+				print stats[cat]
+		else:
+			print row.get_text('\n', strip=True)
+	quit()
 	for grid in grids:
-		for child in grid.children:
+		#for child in grid.children:
 			if child.string and "2016 Game Log" in child.string:
 				stathead = grid
 				break
