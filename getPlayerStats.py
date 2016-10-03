@@ -10,6 +10,9 @@ import datetime
 import requests
 import re
 
+# Stats grid header string
+game_log_title = '2016 Game Log'
+
 # Get gamelog for player
 # Inputs: URL string to player's stat page
 # Returns: game log as list of lists
@@ -29,36 +32,51 @@ def get_player_stats(url):
 	# Find game log grid from tags that match above criteria
 	#stathead = []
 	
-	game_log = soup.find(text='2016 Game Log')
+	# Find player game stats grid
+	game_log = soup.find(text=game_log_title)
+	
+	# If exists, assign appropriate tag as actual grid
 	if game_log:
 		stats_grid = game_log.parent.parent.parent
 	
+	# if no grid is found, log error
 	if not stats_grid:
 		print 'no stats'
+		
 	stats_grid_soup = BeautifulSoup(str(stats_grid), 'lxml')
 	
+	# remove @ symbols from grid so all rows are equal in length
+	stat_rows_at = stats_grid_soup.find_all( text='@')
+	
+	for at in stat_rows_at:
+		fixed = unicode(at).replace('@', '')
+		at.replace_with(fixed)
+	
+	# find all rows in grid
 	stat_rows = stats_grid_soup.find_all('tr')
-	stats = {}
-	for row in stat_rows:
-		if 'stathead' in row['class']:
-			if str(row).find('Receiving') <> -1:
-				pass
-		elif 'colhead' in row['class']:
-			catsInfo = [x.string for x in row.find_all('td', attrs = {'class': None})]
-			catsStats = [x['title'] for x in row.find_all('td', {'title': True})]
-			catsInfo.insert(2,'victory')
-			print catsInfo
-			print catsStats
-			count = 0
-			for cat in catsInfo + catsStats:
-				stats[cat] = [x.get_text('\n', strip=True).split('\n')[count] for x in stat_rows[2:]]
-				#this works, but there's no validation on inputs
-				#it doesn't work for home vs away since the list size varies
-				# need to figure out how to insert a home indicator or remove away indicator
-				count += 1
-				print stats[cat]
-		else:
-			print row.get_text('\n', strip=True)
+
+	stats = {} # game log stats
+	# make sure at least one game has been played and second row is column headers
+	if len(stat_rows) > 2 and 'colhead' in stat_rows[1]['class']:
+		row = stat_rows[1]
+		
+		# get headers..data, opp, and result have no class tag
+		catsInfo = [x.string for x in row.find_all('td', attrs = {'class': None})]
+		catsStats = [x['title'] for x in row.find_all('td', {'title': True})]
+		catsInfo.insert(2,'victory') # explicitly declare victory as a header
+		count = 0
+		
+		for cat in catsInfo + catsStats:
+			# grab all stats in each row and assign it to the corresponding category/header
+			values = [x.get_text('\n', strip=True).split('\n')[count] for x in stat_rows[2:] if len(x.get_text('\n').split('\n')) > 1]
+			
+			# values is a list of each game's stats for the current category
+			stats[cat] = values
+			count += 1
+			print cat, stats[cat]
+	
+	#next step, convert all numbers to float, escape/format values, add year to date
+	#reformat for storage? change storage method?
 	quit()
 	for grid in grids:
 		#for child in grid.children:
