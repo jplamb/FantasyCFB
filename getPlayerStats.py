@@ -61,23 +61,28 @@ def get_player_stats(url):
 		row = stat_rows[1]
 		
 		# get headers..data, opp, and result have no class tag
-		catsInfo = [x.string for x in row.find_all('td', attrs = {'class': None})]
-		catsStats = [x['title'] for x in row.find_all('td', {'title': True})]
+		catsInfo = [x.string.lower().strip() for x in row.find_all('td', attrs = {'class': None})]
+		catsStats = [str(x['title']).lower().strip() for x in row.find_all('td', {'title': True})]
 		catsInfo.insert(2,'victory') # explicitly declare victory as a header
 		count = 0
 		
 		for cat in catsInfo + catsStats:
 			# grab all stats in each row and assign it to the corresponding category/header
-			values = [x.get_text('\n', strip=True).split('\n')[count] for x in stat_rows[2:] if len(x.get_text('\n').split('\n')) > 1]
+			values = [str(x.get_text('\n', strip=True).split('\n')[count]) for x in stat_rows[2:] if len(x.get_text('\n').split('\n')) > 1]
 			
 			# values is a list of each game's stats for the current category
-			stats[cat] = values
+			if cat in catsInfo:
+				if cat == 'date':
+					stats[cat] = [str(x) + "/" + str(datetime.datetime.now().year) for x in values]
+				else:
+					stats[cat] = values
+			else:
+				stats[cat] = [float(x) for x in values]
 			count += 1
-			print cat, stats[cat]
+			print cat, stats[cat], type(stats[cat][0])
 	
-	#next step, convert all numbers to float, escape/format values, add year to date
-	#reformat for storage? change storage method?
-	quit()
+	return stats
+
 	for grid in grids:
 		#for child in grid.children:
 			if child.string and "2016 Game Log" in child.string:

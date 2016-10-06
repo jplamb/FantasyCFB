@@ -121,16 +121,16 @@ def con_get_player_stats():
 		url = player[2]
 		
 		play_game_log = get_player_stats(url)
-		quit()
 		print str(count) + ' / ' + str(total) + '  ' + name
 		if play_game_log:
 			temp_player = Player.Player(name, id, url)
 			temp_player.set_stats(play_game_log)
-		
+		quit()
 		if count % 25 == 0:
-			db_commit()
+			pass
+			#db_commit()
 		count += 1
-	db_commit()
+	#db_commit()
 	"""
 	for url in urls:
 		#print url
