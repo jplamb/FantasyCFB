@@ -40,8 +40,9 @@ def get_player_stats(url):
 		stats_grid = game_log.parent.parent.parent
 	
 	# if no grid is found, log error
-	if not stats_grid:
+	if not game_log or not stats_grid:
 		print 'no stats'
+		return
 		
 	stats_grid_soup = BeautifulSoup(str(stats_grid), 'lxml')
 	
@@ -54,7 +55,7 @@ def get_player_stats(url):
 	
 	# find all rows in grid
 	stat_rows = stats_grid_soup.find_all('tr')
-
+	
 	stats = {} # game log stats
 	# make sure at least one game has been played and second row is column headers
 	if len(stat_rows) > 2 and 'colhead' in stat_rows[1]['class']:

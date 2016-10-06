@@ -80,7 +80,6 @@ class Player:
 				stat = str(stat).translate(None, "'_")
 				update_sql += "'%s'," % stat
 		update_sql = update_sql[:-1] + "where week = %s and player_id = %s" %(week, self.ID)
-		print update_sql
 		db_execute(update_sql)
 	
 	def insert_game_row(self, stats, week, game):
