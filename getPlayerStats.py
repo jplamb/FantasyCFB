@@ -69,8 +69,8 @@ def get_player_stats(url):
 		
 		for cat in catsInfo + catsStats:
 			# grab all stats in each row and assign it to the corresponding category/header
-			values = [str(x.get_text('\n', strip=True).split('\n')[count]) for x in stat_rows[2:] if len(x.get_text('\n').split('\n')) > 1]
-			
+			values = [str(x.get_text('\n', strip=True).split('\n')[count]) for x in stat_rows[2:] if len(x.get_text('\n').split('\n')) > 1 and 'statistics' not in str(x)]
+
 			# values is a list of each game's stats for the current category
 			if cat in catsInfo:
 				if cat == 'date':

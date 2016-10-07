@@ -84,12 +84,12 @@ class Player:
 	
 	def insert_game_row(self, stats, week, game):
 		# Base string for insert statement
-		insert_sql_cols = 'insert into %s (player_id, player_name, week,' % self.table_name
+		insert_sql = 'insert into %s (player_id, player_name, week,' % self.table_name
 
 		# Generate insert statement base with columns
 		for cat in stats.keys():
-			insert_sql_cols += self.get_corres_col_name(cat) + ','
-		insert_sql_cols = insert_sql_cols[:-1] + """) values (%s, '%s', %s, """ %(self.ID, self.name, week)
+			insert_sql += self.get_corres_col_name(cat) + ','
+		insert_sql = insert_sql[:-1] + """) values (%s, '%s', %s, """ %(self.ID, self.name, week)
 		
 		for cat in stats.keys():
 			stat = stats[cat][game]
