@@ -103,7 +103,6 @@ def con_get_players():
 def con_get_player_stats():
 	#(names, ids, urls) = con_get_players()
 	#week = raw_input('What week is it?\n')
-
 	game_logs = []
 	
 	sql = """
@@ -125,7 +124,7 @@ def con_get_player_stats():
 		if play_game_log:
 			temp_player = Player.Player(name, id, url)
 			temp_player.set_stats(play_game_log)
-		
+
 		if count % 25 == 0:
 			db_commit()
 		count += 1
