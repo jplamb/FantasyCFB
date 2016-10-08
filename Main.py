@@ -15,6 +15,8 @@ from dbConn import db_execute, close_db, db_commit, open_db_connection
 from teams import record_team
 import Roster
 from calcPoints import calc_all_player_points, calc_team_def_points, post_team_points
+import grequests
+import requests
 
 # Run console 
 # inputs actions as list of choices (strs)
@@ -103,24 +105,72 @@ def con_get_players():
 def con_get_player_stats():
 	#(names, ids, urls) = con_get_players()
 	#week = raw_input('What week is it?\n')
-
+	starttime = datetime.datetime.now()
 	game_logs = []
 	
 	sql = """
 			select name, player_id, url
-			from players 
+			from players
 			"""
 	result = db_execute(sql)
-	#result = [['Jerod Evans', '556465','http://www.espn.com/college-football/player/_/id/556465/jerod-evans']]
+	
+	# initialize values for visualizing progress
 	count = 1
 	total = len(result)
 	
+	# declare session 
+	sess = requests.Session()
+	
+	# maintain player data while grabbing page content
+	players = {}
+	urls = []
+	
+	# create list of urls and dictionary of player ID and name
+	for player in result:
+		urls.append(player[2])
+		players[player[1]] = player[0] #key is ID and contains player name
+	
+	# get page content asynchronously 
+	rs = (grequests.get(u, session=sess) for u in urls)
+	responses = grequests.imap(rs, size = 1000) # limit number of requests so open files doesn't exceed system max
+
+	# remove no responses
+	responses = [x for x in responses if x is not None]
+	
+	for r in responses:
+		# pull id out of url
+		id = re.search("id/[0-9]+", r.url)
+		
+		if not id:
+			continue
+		play_id = int(id.group()[3:])
+		
+		# get corresponding name out of dictionary
+		name = players[play_id]
+		
+		# print progress
+		print str(count) + ' / ' + str(total) + '  ' + name + '   ' + str(play_id)
+		
+		# parse page content for stats
+		stats = get_player_stats(r.content)
+		
+		# save player stats
+		if stats:
+			temp_player = Player.Player(name, play_id, r.url)
+			temp_player.set_stats(stats)
+		
+		count += 1
+	
+	endtime = datetime.datetime.now()
+	print endtime-starttime
+
+"""
 	for player in result:
 		name = player[0]
 		id = player[1]
 		url = player[2]
 		print str(count) + ' / ' + str(total) + '  ' + name + '   ' + str(id)
-		play_game_log = get_player_stats(url)
+		#play_game_log = get_player_stats(url)
 		
 		if play_game_log:
 			temp_player = Player.Player(name, id, url)
@@ -130,7 +180,7 @@ def con_get_player_stats():
 			#db_commit()
 		count += 1
 	#db_commit()
-	"""
+	
 	for url in urls:
 		#print url
 		play_game_log = get_player_stats(url)

@@ -12,37 +12,28 @@ import requests
 import re
 
 # Stats grid header string
-game_log_title = '2016 Game Log'
+GAME_LOG_TITLE = '2016 Game Log'
 
 # Get gamelog for player
 # Inputs: URL string to player's stat page
 # Returns: game log as list of lists
-def get_player_stats(url):
-	try:
-		page = requests.get(url)
-	except Exception as e:
-		logPlayerException(url)
-		
-	tree = html.fromstring(page.content)
-	soup = BeautifulSoup(page.content, 'lxml')
-	
-	# Get the grid containing game log...asssumes this is the second grid on the page
-	#grids = soup.find_all("tr", attrs={"class": "stathead"})[1]
-	#grids = soup.find_all("tr", attrs={"class": "stathead"})
-	
-	# Find game log grid from tags that match above criteria
-	#stathead = []
+def get_player_stats(pageContent):
+
+	soup = BeautifulSoup(pageContent, 'lxml')
 	
 	# Find player game stats grid
-	game_log = soup.find(text=game_log_title)
+	game_log = soup.find(text=GAME_LOG_TITLE)
 	
 	# If exists, assign appropriate tag as actual grid
 	if game_log:
 		stats_grid = game_log.parent.parent.parent
+	else:
+		#print 'no stats'
+		return
 	
 	# if no grid is found, log error
-	if not game_log or not stats_grid:
-		print 'no stats'
+	if not stats_grid:
+		#print 'no stats'
 		return
 		
 	stats_grid_soup = BeautifulSoup(str(stats_grid), 'lxml')
@@ -70,7 +61,7 @@ def get_player_stats(url):
 		
 		for cat in catsInfo + catsStats:
 			# grab all stats in each row and assign it to the corresponding category/header
-			values = [x.get_text('\n', strip=True).split('\n')[count] for x in stat_rows[2:] if len(x.get_text('\n').split('\n')) > 1 and 'statistics' not in str(x)]
+			values = [x.get_text('\n', strip=True).split('\n')[count] for x in stat_rows[2:] if len(x.get_text('\n').split('\n')) > 1 and 'statistics' not in str(x) and re.search("(PM|AM)", str(x)) == None]
 
 			# values is a list of each game's stats for the current category
 			if cat in catsInfo:
@@ -83,10 +74,10 @@ def get_player_stats(url):
 			else:
 				stats[cat] = values
 			count += 1
-			print cat, stats[cat]
+			#print cat, stats[cat]
 	
 	return stats
-
+"""
 	for grid in grids:
 		#for child in grid.children:
 			if child.string and "2016 Game Log" in child.string:
@@ -214,4 +205,4 @@ def logPlayerException(url):
     #    f.write('Week, Player ID, Total Points, Elig Points, Unelig Points, week, player id, Game Date, Player Name, Opponent, Result, Pass Compl, Pass Att, Pass Yards, Compl Pct, Pass Long, Pass TD, Int Thrown, Pass Rate, Raw QBR, Adj QBR, Rush Att, Rush Yards, Rush Avg, Rush Long, Rush TD, Rec Receptions, Rec Yards, Rec Avg, Rec Long, Rec TD, FG 1-19, FG 20-29, FG 30-39, FG 40-49, FG 50+, FG Made, FG Pct, FG Long, XP Made, XP Att, Kick Points, Def Tackles, Def Unassist Tackles, Def Ass Tackles, Def Sacks, Def Forced Fumbles, Def Int Ret Yards, Def Int Ret Avg, Def Int Ret Long, Def Int Ret TD, Def Pass Defend, Punt Total, Punt Avg, Punt Total, Punt Total Yards')
 	f.write('%s, '%(url))
 	f.close()
-		
+		"""
