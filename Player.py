@@ -74,7 +74,7 @@ class Player:
 			update_sql += self.get_corres_col_name(cat) + '='
 			stat = stats[cat][game]
 			
-			if isinstance(stat, float):
+			if self.is_number(stat):
 				update_sql += "%s," % str(stat)
 			else:
 				stat = str(stat).translate(None, "'_")
@@ -94,7 +94,7 @@ class Player:
 		for cat in stats.keys():
 			stat = stats[cat][game]
 			
-			if isinstance(stat, float):
+			if self.is_number(stat):
 				insert_sql += str(stat) + ','
 			else:
 				stat = str(stat).translate(None, "'_")
@@ -127,7 +127,14 @@ class Player:
 			#		else:
 			#			insert_sql += str(stat) + ','
 			#	insert_sql = insert_sql[:-1] + ')'
-			#	db_execute(insert_sql)								
+			#	db_execute(insert_sql)
+	
+	def is_number(self, numb):
+		try:
+			float(numb)
+			return True
+		except ValueError:
+			return False
 		
 	# Maps html stat name with db column name
 	# Input: html stat column as string

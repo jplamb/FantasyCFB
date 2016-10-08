@@ -6,6 +6,7 @@
 
 from lxml import html
 from bs4 import BeautifulSoup, Tag
+from unidecode import unidecode
 import datetime
 import requests
 import re
@@ -69,18 +70,20 @@ def get_player_stats(url):
 		
 		for cat in catsInfo + catsStats:
 			# grab all stats in each row and assign it to the corresponding category/header
-			values = [str(x.get_text('\n', strip=True).split('\n')[count]) for x in stat_rows[2:] if len(x.get_text('\n').split('\n')) > 1 and 'statistics' not in str(x)]
+			values = [x.get_text('\n', strip=True).split('\n')[count] for x in stat_rows[2:] if len(x.get_text('\n').split('\n')) > 1 and 'statistics' not in str(x)]
 
 			# values is a list of each game's stats for the current category
 			if cat in catsInfo:
 				if cat == 'date':
 					stats[cat] = [str(x) + "/" + str(datetime.datetime.now().year) for x in values]
+				elif cat == 'opp':
+					stats[cat] = [unidecode(x) for x in values]
 				else:
 					stats[cat] = values
 			else:
-				stats[cat] = [float(x) for x in values]
+				stats[cat] = values
 			count += 1
-			print cat, stats[cat], type(stats[cat][0])
+			print cat, stats[cat]
 	
 	return stats
 

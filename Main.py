@@ -108,7 +108,7 @@ def con_get_player_stats():
 	
 	sql = """
 			select name, player_id, url
-			from players
+			from players 
 			"""
 	result = db_execute(sql)
 	#result = [['Jerod Evans', '556465','http://www.espn.com/college-football/player/_/id/556465/jerod-evans']]
