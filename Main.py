@@ -17,7 +17,9 @@ import Roster
 from calcPoints import calc_all_player_points, calc_team_def_points, post_team_points
 import grequests
 import requests
+from multiprocessing.dummy import Pool
 
+players = {}
 # Run console 
 # inputs actions as list of choices (strs)
 # returns selected action as int
@@ -113,56 +115,70 @@ def con_get_player_stats():
 			from players
 			"""
 	result = db_execute(sql)
-	
+	close_db()
+
 	# initialize values for visualizing progress
-	count = 1
-	total = len(result)
+	#count = 1
+	#total = len(result)
 	
 	# declare session 
 	sess = requests.Session()
 	
 	# maintain player data while grabbing page content
-	players = {}
+	
 	urls = []
 	
 	# create list of urls and dictionary of player ID and name
 	for player in result:
 		urls.append(player[2])
 		players[player[1]] = player[0] #key is ID and contains player name
-	
 	# get page content asynchronously 
 	rs = (grequests.get(u, session=sess) for u in urls)
+	#rs = (grequests.get(u, hooks=dict(response = save_player_stats)) for u in urls)
 	responses = grequests.imap(rs, size = 1000) # limit number of requests so open files doesn't exceed system max
+	#responses = grequests.send(rs, grequests.Pool(2))
 
 	# remove no responses
 	responses = [x for x in responses if x is not None]
+	pool = Pool(3)
 	
-	for r in responses:
-		# pull id out of url
-		id = re.search("id/[0-9]+", r.url)
-		
-		if not id:
-			continue
-		play_id = int(id.group()[3:])
-		
-		# get corresponding name out of dictionary
-		name = players[play_id]
-		
-		# print progress
-		print str(count) + ' / ' + str(total) + '  ' + name + '   ' + str(play_id)
-		
-		# parse page content for stats
-		stats = get_player_stats(r.content)
-		
-		# save player stats
-		if stats:
-			temp_player = Player.Player(name, play_id, r.url)
-			temp_player.set_stats(stats)
-		
-		count += 1
+	pool.map(save_player_stats, responses)
+	
+	pool.close()
+	pool.join()
 	
 	endtime = datetime.datetime.now()
 	print endtime-starttime
+	
+def save_player_stats(r):
+	#for r in responses:
+	# pull id out of url
+	if not r:
+		return
+	id = re.search("id/[0-9]+", r.url)
+	
+	if not id:
+		return
+	open_db_connection(False)
+	play_id = int(id.group()[3:])
+	
+	# get corresponding name out of dictionary
+	name = players[play_id]
+	
+	# print progress
+	#print str(count) + ' / ' + str(total) + '  ' + name + '   ' + str(play_id)
+	print name + '    '  + str(play_id)
+	# parse page content for stats
+	stats = get_player_stats(r.content)
+	
+	# save player stats
+	if stats:
+		temp_player = Player.Player(name, play_id, r.url)
+		temp_player.set_stats(stats)
+	db_commit()
+	#count += 1
+	
+
 
 """
 	for player in result:
@@ -277,43 +293,11 @@ open_db_connection(False)
 command = run_console(action_choice)
 perform_action(command)
 
-close_db()
+#close_db()
 print 'Closing..'
 print datetime.datetime.now().time()
 
 
-# Legacy code
-"""
-[power_five_roster_links, power_five_team_names] = get_power_five_roster_links('http://espn.go.com/college-football/teams')
-#update_stats(power_five_roster_links)
-
-	
-schedule = Schedule("Virginia Tech", "http://espn.go.com/college-football/team/schedule/_/id/259/virginia-tech-hokies")
-schedule.get_schedule(schedule.url)
-
-power_five_schedule_links = []
-for count,link in enumerate(power_five_roster_links):
-	power_five_schedule_links.append(link.replace("roster","schedule"))
-	
-
-filter(None,power_five_schedule_links)
-for count,team in enumerate(power_five_team_names):
-	#print team, " ", power_five_schedule_links[count]
-	schedule = Schedule(team,power_five_schedule_links[count])
-	#print schedule.url
-	#print power_five_schedule_links[count]
-	schedule.get_schedule(schedule.url)
-
-# test player class and db interface
-#test_player = Player("John Lamb", 2, 'www.themanualoverride.com')
-#print_game_log(get_player_stats("http://espn.go.com/college-football/player/_/id/511180/alex-howell"))
-#Fitz = Player('Alex Howell', 511180, "http://espn.go.com/college-football/player/_/id/511180/alex-howell")
-#Fitz.set_stats(get_player_stats("http://espn.go.com/college-football/player/_/id/511180/alex-howell"))
-				
-print datetime.datetime.now().time()
-
-#print " ".join(power_five_roster_links[0].rsplit("/",1)[1].split("-"))
-"""
 
 
 
