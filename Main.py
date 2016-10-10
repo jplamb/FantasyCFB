@@ -173,7 +173,7 @@ def con_get_player_stats():
 	
 	#pool.close()
 	#pool.join()
-	#
+	
 	endtime = datetime.datetime.now()
 	print endtime-starttime
 	
