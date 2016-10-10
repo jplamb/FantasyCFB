@@ -140,12 +140,16 @@ def con_get_player_stats():
 
 	# remove no responses
 	responses = [x for x in responses if x is not None]
-	pool = Pool(3)
+	open_db_connection(False)
+	for r in responses:
+		save_player_stats(r)
+	db_commit()
+	#pool = Pool(2)
 	
-	pool.map(save_player_stats, responses)
+	#pool.map(save_player_stats, responses)
 	
-	pool.close()
-	pool.join()
+	#pool.close()
+	#pool.join()
 	
 	endtime = datetime.datetime.now()
 	print endtime-starttime
@@ -159,7 +163,7 @@ def save_player_stats(r):
 	
 	if not id:
 		return
-	open_db_connection(False)
+	
 	play_id = int(id.group()[3:])
 	
 	# get corresponding name out of dictionary
@@ -175,7 +179,7 @@ def save_player_stats(r):
 	if stats:
 		temp_player = Player.Player(name, play_id, r.url)
 		temp_player.set_stats(stats)
-	db_commit()
+	#db_commit()
 	#count += 1
 
 # Saves players stats to DB
