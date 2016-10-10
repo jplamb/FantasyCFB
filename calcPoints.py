@@ -75,34 +75,40 @@ def calc_team_def_points(week):
         if not game_results:
             continue
         
-        game_result, opp = game_results[0]
+        #game_result, opp = game_results[0]
 
-        for x in range(len(game_results)):
-            if '-' not in game_result:
-                game_result, opp = game_results[x]
+        #for x in range(len(game_results)):
+        #    if '-' not in game_result:
+        #        game_result, opp = game_results[x]
         
-        x = 0
-        while x < len(game_results) and '-' not in game_result:
-            game_result, opp = game_results[x]
-            print game_result
-            x+=1
+        #x = 0
+        #while x < len(game_results) and '-' not in game_result:
+        #    game_result, opp = game_results[x]
+        #    print game_result
+        #    x+=1
         #if '-' not in game_result:
         #    continue
-        (points_all1, points_all2) = game_result.split('-')
+        #(points_all1, points_all2) = game_result.split('-')
         
         #victory = ''
         #while victory != 'Y' and victory != 'N':
         #    victory = raw_input('Did %s win?\n'%(team)).strip().upper()
-        victory = get_team_victory(team, opp)
-        if victory:
-            victory = victory[0][0]
-        else:
-            victory = raw_input('Was %s the home team?\n'%(team)).strip().upper()
-        print victory, team, opp
-        if victory == 'home' or victory == 'Y':
-            points_all = points_all2
-        elif victory == 'away' or victory == 'N':
-            points_all = points_all1
+        victoryRes = get_team_points_allowed(team, week)
+        if victoryRes:
+            (win, game_points) = victoryRes[0]
+            if 'OT' in game_points:
+                game_points = game_points[:game_points.find('(OT)')].strip()
+                
+            (points_all1, points_all2) = game_points.split('-')
+
+        print team, win, game_points
+        
+        if not win:
+            points_all = 42
+        elif win == 'W':
+            points_all = int(points_all2)
+        elif win == 'L':
+            points_all = int(points_all1)
         else:
             points_all = 42
             
@@ -123,6 +129,8 @@ def calc_team_def_points(week):
         else:
             total_points = points_stats['points_all_plus']
         
+        print 'points_all',
+        print total_points, points_all
         int_caught = float(get_interceptions(team,week)[0][0])
         sacks = float(get_sacks(team, week)[0][0])
         fumbles = float(get_forced_fumbles(team, week)[0][0])
@@ -130,12 +138,20 @@ def calc_team_def_points(week):
         
         if int_caught:
             total_points += int_caught * points_stats['def_int']
+            print 'int',
+            print total_points, int_caught
         if sacks:
             total_points += sacks * points_stats['def_sacks']
+            print 'sacks',
+            print total_points, sacks
         if fumbles:
             total_points += fumbles * points_stats['def_force_fmble']
+            print 'fumbles',
+            print total_points, fumbles
         if int_td:
             total_points += int_td * points_stats['def_int_ret_td']
+            print 'int td',
+            print total_points, int_td
         
         ePoints = 0
         uPoints = 0
@@ -189,11 +205,12 @@ def get_team_result(team, week):
             """%(team, week)
     return db_execute(select_sql)
 
-def get_team_victory(team, opp):
+def get_team_points_allowed(team, week):
     select_sql = """
-            select status from schedule where team = '%s'
-            and opp = '%s'
-            """%(team, opp)
+            select victory, result from player_stats
+            where player_id in (select player_id from players where team = '%s')
+            and week = %s and victory is not null
+            """%(team, week)
     return db_execute(select_sql)
     
 def get_teams():

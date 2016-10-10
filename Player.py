@@ -68,9 +68,8 @@ class Player:
 					
 	def update_game_row(self, stats, week, game):
 		update_sql = """update %s set """ % self.table_name
-		
+
 		for cat in stats.keys():
-			
 			update_sql += self.get_corres_col_name(cat) + '='
 			stat = stats[cat][game]
 			
@@ -78,7 +77,8 @@ class Player:
 				update_sql += "%s," % str(stat)
 			else:
 				stat = str(stat).translate(None, "'_")
-				update_sql += "'%s'," % stat
+				update_sql += "'%s'," % str(stat)
+		
 		update_sql = update_sql[:-1] + "where week = %s and player_id = %s" %(week, self.ID)
 		db_execute(update_sql)
 	

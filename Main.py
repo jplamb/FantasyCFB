@@ -112,10 +112,9 @@ def con_get_player_stats():
 	
 	sql = """
 			select name, player_id, url
-			from players
+			from players 
 			"""
 	result = db_execute(sql)
-	close_db()
 
 	# initialize values for visualizing progress
 	#count = 1
@@ -133,28 +132,29 @@ def con_get_player_stats():
 		urls.append(player[2])
 		players[player[1]] = player[0] #key is ID and contains player name
 	# get page content asynchronously 
-	rs = (grequests.get(u, session=sess) for u in urls)
-	#rs = (grequests.get(u, hooks=dict(response = save_player_stats)) for u in urls)
-	responses = grequests.imap(rs, size = 1000) # limit number of requests so open files doesn't exceed system max
+	#rs = (grequests.get(u, session=sess) for u in urls)
+	rs = (grequests.get(u, session=sess, hooks=dict(response = save_player_stats)) for u in urls)
+	responses = grequests.map(rs, size = 100) # limit number of requests so open files doesn't exceed system max
+	#responses = grequests.map(rs, size = 1000, )
 	#responses = grequests.send(rs, grequests.Pool(2))
 
 	# remove no responses
-	responses = [x for x in responses if x is not None]
-	open_db_connection(False)
-	for r in responses:
-		save_player_stats(r)
-	db_commit()
+	#responses = [x for x in responses if x is not None]
+	#open_db_connection(False)
+	#for r in responses:
+	#	save_player_stats(r)
+	#db_commit()
 	#pool = Pool(2)
 	
 	#pool.map(save_player_stats, responses)
 	
 	#pool.close()
 	#pool.join()
-	
+	#
 	endtime = datetime.datetime.now()
 	print endtime-starttime
 	
-def save_player_stats(r):
+def save_player_stats(r, **kwargs):
 	#for r in responses:
 	# pull id out of url
 	if not r:
@@ -163,7 +163,6 @@ def save_player_stats(r):
 	
 	if not id:
 		return
-	
 	play_id = int(id.group()[3:])
 	
 	# get corresponding name out of dictionary
@@ -179,7 +178,7 @@ def save_player_stats(r):
 	if stats:
 		temp_player = Player.Player(name, play_id, r.url)
 		temp_player.set_stats(stats)
-	#db_commit()
+	
 	#count += 1
 
 # Saves players stats to DB
@@ -269,7 +268,7 @@ open_db_connection(False)
 command = run_console(action_choice)
 perform_action(command)
 
-#close_db()
+close_db()
 print 'Closing..'
 print datetime.datetime.now().time()
 
