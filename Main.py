@@ -177,34 +177,6 @@ def save_player_stats(r):
 		temp_player.set_stats(stats)
 	db_commit()
 	#count += 1
-	
-
-
-"""
-	for player in result:
-		name = player[0]
-		id = player[1]
-		url = player[2]
-		print str(count) + ' / ' + str(total) + '  ' + name + '   ' + str(id)
-		#play_game_log = get_player_stats(url)
-		
-		if play_game_log:
-			temp_player = Player.Player(name, id, url)
-			temp_player.set_stats(play_game_log)
-		if count % 25 == 0:
-			pass
-			#db_commit()
-		count += 1
-	#db_commit()
-	
-	for url in urls:
-		#print url
-		play_game_log = get_player_stats(url)
-		#print play_game_log
-		game_logs.append(play_game_log)
-	
-	con_save_player_stats(names, ids, urls,game_logs)
-	"""
 
 # Saves players stats to DB
 # inputs names as list of strings, ids as list of ints, urls as list of strings, and game log as list
