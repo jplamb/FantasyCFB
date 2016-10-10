@@ -15,7 +15,12 @@ from dbConn import db_execute, close_db, db_commit, open_db_connection
 from teams import record_team
 import Roster
 from calcPoints import calc_all_player_points, calc_team_def_points, post_team_points
+import grequests
+import requests
+from multiprocessing.dummy import Pool
 
+players = {}
+REQUESTS_SIZE = 100
 # Run console 
 # inputs actions as list of choices (strs)
 # returns selected action as int
@@ -101,20 +106,31 @@ def con_get_players():
 # Get stats (game log) for players
 # inputs names as list of string, id as list of ints, and url as list of strings
 def con_get_player_stats():
+<<<<<<< HEAD
 	#(names, ids, urls) = con_get_players()
 	#week = raw_input('What week is it?\n')
 	game_logs = []
+=======
+	starttime = datetime.datetime.now()
+>>>>>>> playStatsOpt
 	
 	sql = """
 			select name, player_id, url
 			from players 
 			"""
 	result = db_execute(sql)
-	#result = [['Jerod Evans', '556465','http://www.espn.com/college-football/player/_/id/556465/jerod-evans']]
-	count = 1
-	total = len(result)
+
+	# initialize values for visualizing progress
+	#count = 1
+	#total = len(result)
 	
+	# declare session 
+	sess = requests.Session()
+	urls = []
+	
+	# create list of urls and dictionary of player ID and name
 	for player in result:
+<<<<<<< HEAD
 		name = player[0]
 		id = player[1]
 		url = player[2]
@@ -135,9 +151,62 @@ def con_get_player_stats():
 		play_game_log = get_player_stats(url)
 		#print play_game_log
 		game_logs.append(play_game_log)
+=======
+		urls.append(player[2])
+		players[player[1]] = player[0] #key is ID and contains player name
+		
+	# get page content asynchronously 
+	rs = (grequests.get(u, session=sess, hooks=dict(response = save_player_stats)) for u in urls)
+	responses = grequests.map(rs, size = REQUESTS_SIZE) # limit number of requests so open files doesn't exceed system max
+	#responses = grequests.send(rs, grequests.Pool(2))
+
+	# code for threading
+	# remove no responses
+	#responses = [x for x in responses if x is not None]
+	#open_db_connection(False)
+	#for r in responses:
+	#	save_player_stats(r)
+	#db_commit()
+	#pool = Pool(2)
 	
-	con_save_player_stats(names, ids, urls,game_logs)
-	"""
+	#pool.map(save_player_stats, responses)
+	
+	#pool.close()
+	#pool.join()
+	#
+	endtime = datetime.datetime.now()
+	print endtime-starttime
+	
+def save_player_stats(r, **kwargs):
+	#for r in responses:
+	# pull id out of url
+	if not r:
+		return
+	
+	id = re.search("id/[0-9]+", r.url)
+	
+	if not id:
+		return
+>>>>>>> playStatsOpt
+	
+	play_id = int(id.group()[3:])
+	
+	# get corresponding name out of dictionary
+	name = players[play_id]
+	
+	# print progress
+	#print str(count) + ' / ' + str(total) + '  ' + name + '   ' + str(play_id)
+	print name + '    '  + str(play_id)
+	
+	# parse page content for stats
+	stats = get_player_stats(r.content)
+	
+	# save player stats
+	if stats:
+		temp_player = Player.Player(name, play_id, r.url)
+		temp_player.set_stats(stats)
+	
+	#count += 1
 
 # Saves players stats to DB
 # inputs names as list of strings, ids as list of ints, urls as list of strings, and game log as list
@@ -231,38 +300,6 @@ print 'Closing..'
 print datetime.datetime.now().time()
 
 
-# Legacy code
-"""
-[power_five_roster_links, power_five_team_names] = get_power_five_roster_links('http://espn.go.com/college-football/teams')
-#update_stats(power_five_roster_links)
-
-	
-schedule = Schedule("Virginia Tech", "http://espn.go.com/college-football/team/schedule/_/id/259/virginia-tech-hokies")
-schedule.get_schedule(schedule.url)
-
-power_five_schedule_links = []
-for count,link in enumerate(power_five_roster_links):
-	power_five_schedule_links.append(link.replace("roster","schedule"))
-	
-
-filter(None,power_five_schedule_links)
-for count,team in enumerate(power_five_team_names):
-	#print team, " ", power_five_schedule_links[count]
-	schedule = Schedule(team,power_five_schedule_links[count])
-	#print schedule.url
-	#print power_five_schedule_links[count]
-	schedule.get_schedule(schedule.url)
-
-# test player class and db interface
-#test_player = Player("John Lamb", 2, 'www.themanualoverride.com')
-#print_game_log(get_player_stats("http://espn.go.com/college-football/player/_/id/511180/alex-howell"))
-#Fitz = Player('Alex Howell', 511180, "http://espn.go.com/college-football/player/_/id/511180/alex-howell")
-#Fitz.set_stats(get_player_stats("http://espn.go.com/college-football/player/_/id/511180/alex-howell"))
-				
-print datetime.datetime.now().time()
-
-#print " ".join(power_five_roster_links[0].rsplit("/",1)[1].split("-"))
-"""
 
 
 

@@ -5,7 +5,7 @@
 
 import base64
 import MySQLdb
-
+import os
 # open db connection to ffbdev
 def open_db_connection(dict):
 	global db
@@ -14,7 +14,6 @@ def open_db_connection(dict):
 	db = MySQLdb.connect('localhost', 'appuser', base64.b64decode('YXBwdXNlcg=='), 'ffbdev')
 
 	if not dict:
-		print 'new cursor'
 		cursor = db.cursor()
 	else:
 		cursor = db.cursor(cursorclass=MySQLdb.cursors.DictCursor)
@@ -29,7 +28,6 @@ def close_db():
 # Returns boolean if table exists
 def check_table_exists(name):
 	#open_db_connection(False)
-		
 	show = 'show tables like \'%s\'' % name
 	result = cursor.execute(show)
 		
