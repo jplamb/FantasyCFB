@@ -106,13 +106,7 @@ def con_get_players():
 # Get stats (game log) for players
 # inputs names as list of string, id as list of ints, and url as list of strings
 def con_get_player_stats():
-<<<<<<< HEAD
-	#(names, ids, urls) = con_get_players()
-	#week = raw_input('What week is it?\n')
-	game_logs = []
-=======
 	starttime = datetime.datetime.now()
->>>>>>> playStatsOpt
 	
 	sql = """
 			select name, player_id, url
@@ -130,28 +124,6 @@ def con_get_player_stats():
 	
 	# create list of urls and dictionary of player ID and name
 	for player in result:
-<<<<<<< HEAD
-		name = player[0]
-		id = player[1]
-		url = player[2]
-		
-		play_game_log = get_player_stats(url)
-		print str(count) + ' / ' + str(total) + '  ' + name
-		if play_game_log:
-			temp_player = Player.Player(name, id, url)
-			temp_player.set_stats(play_game_log)
-
-		if count % 25 == 0:
-			db_commit()
-		count += 1
-	db_commit()
-	"""
-	for url in urls:
-		#print url
-		play_game_log = get_player_stats(url)
-		#print play_game_log
-		game_logs.append(play_game_log)
-=======
 		urls.append(player[2])
 		players[player[1]] = player[0] #key is ID and contains player name
 		
@@ -187,7 +159,6 @@ def save_player_stats(r, **kwargs):
 	
 	if not id:
 		return
->>>>>>> playStatsOpt
 	
 	play_id = int(id.group()[3:])
 	
