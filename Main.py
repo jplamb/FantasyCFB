@@ -20,6 +20,7 @@ import requests
 from multiprocessing.dummy import Pool
 
 players = {}
+REQUESTS_SIZE = 100
 # Run console 
 # inputs actions as list of choices (strs)
 # returns selected action as int
@@ -105,10 +106,7 @@ def con_get_players():
 # Get stats (game log) for players
 # inputs names as list of string, id as list of ints, and url as list of strings
 def con_get_player_stats():
-	#(names, ids, urls) = con_get_players()
-	#week = raw_input('What week is it?\n')
 	starttime = datetime.datetime.now()
-	game_logs = []
 	
 	sql = """
 			select name, player_id, url
@@ -122,22 +120,19 @@ def con_get_player_stats():
 	
 	# declare session 
 	sess = requests.Session()
-	
-	# maintain player data while grabbing page content
-	
 	urls = []
 	
 	# create list of urls and dictionary of player ID and name
 	for player in result:
 		urls.append(player[2])
 		players[player[1]] = player[0] #key is ID and contains player name
+		
 	# get page content asynchronously 
-	#rs = (grequests.get(u, session=sess) for u in urls)
 	rs = (grequests.get(u, session=sess, hooks=dict(response = save_player_stats)) for u in urls)
-	responses = grequests.map(rs, size = 100) # limit number of requests so open files doesn't exceed system max
-	#responses = grequests.map(rs, size = 1000, )
+	responses = grequests.map(rs, size = REQUESTS_SIZE) # limit number of requests so open files doesn't exceed system max
 	#responses = grequests.send(rs, grequests.Pool(2))
 
+	# code for threading
 	# remove no responses
 	#responses = [x for x in responses if x is not None]
 	#open_db_connection(False)
@@ -159,10 +154,12 @@ def save_player_stats(r, **kwargs):
 	# pull id out of url
 	if not r:
 		return
+	
 	id = re.search("id/[0-9]+", r.url)
 	
 	if not id:
 		return
+	
 	play_id = int(id.group()[3:])
 	
 	# get corresponding name out of dictionary
@@ -171,6 +168,7 @@ def save_player_stats(r, **kwargs):
 	# print progress
 	#print str(count) + ' / ' + str(total) + '  ' + name + '   ' + str(play_id)
 	print name + '    '  + str(play_id)
+	
 	# parse page content for stats
 	stats = get_player_stats(r.content)
 	
