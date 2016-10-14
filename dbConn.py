@@ -5,7 +5,6 @@
 
 import base64
 import MySQLdb
-from mysql.connector import errocode
 
 class Mysql(object):
     __instance = None
@@ -23,7 +22,7 @@ class Mysql(object):
             cls.__instance = super(Mysql, cls).__new__(cls, *args, **kwargs)
         return cls.__instance
     
-    def __init__(self, host = 'localhost', user='appuser', password=base64.b64decode('YXBwdXNlcg=='), databse='ffbdev'):
+    def __init__(self, host = 'localhost', user='appuser', password=base64.b64decode('YXBwdXNlcg=='), database='ffbdev'):
         self.__host = host
         self.__user = user
         self.__password = password
@@ -31,13 +30,13 @@ class Mysql(object):
         
     def _open(self):
         try:
-            conn = mysql.connector.connect(host=self.__host, user=self.__user, password=self.__password, database=self.__database)
+            conn = MySQLdb.connect(host=self.__host, user=self.__user, password=self.__password, database=self.__database)
             self.__connection = conn
             self.__cursor = conn.cursor()
-        except mysql.connector.Error as err:
-            if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
+        except MySQLdb.Error as err:
+            if err.errno == errorcode.ER_DBACCESS_DENIED_ERROR:
                 print 'Oops, looks like there''s a problem with your username or password'
-            elif err.errno == errorcode.ER_BAD_DB_ERROR:
+            elif err.errno == errorcode.ER_NO_DB_ERROR:
                 print 'Oops, this is not the database you are looking for'
             else:
                 print err
@@ -72,8 +71,8 @@ class Mysql(object):
         l = len(keys) - 1
         for i, key in enumerate(keys):
             query += "'"+key+"'"
-            if i < 1
-            query += ','
+            if i < 1:
+                query += ','
         query += " FROM %s" % table
         if where:
             query += " WHERE %s" %where
@@ -93,7 +92,7 @@ class Mysql(object):
         values = kwargs.values()
         l = len(keys) - 1
         for i, key in enumerate(keys):
-            query += "'"+key"'%s"
+            query += "'"+key+"'%s"
             if i < 1:
                 query += ","
         query += " WHERE index =%d" %index

@@ -4,7 +4,7 @@
 ########################################################
 
 import datetime
-from dbConn import db_execute, close_db, open_db_connection
+from dbConn import Mysql 
 def get_players_playing():
     now = datetime.datetime.now()
     
@@ -17,6 +17,7 @@ def get_players_playing():
             """ 
     print select_sql
     print db_execute(select_sql)
-    
-open_db_connection(False)
+
+connection = Mysql()
+print connection.select('schedule','where gm_date <= curdate()')
 get_players_playing()
