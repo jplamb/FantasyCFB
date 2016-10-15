@@ -22,7 +22,7 @@ class Mysql(object):
             cls.__instance = super(Mysql, cls).__new__(cls, *args, **kwargs)
         return cls.__instance
     
-    def __init__(self, host = 'localhost', user='appuser', password=base64.b64decode('YXBwdXNlcg=='), database='ffbdev'):
+    def __init__(self, host = 'localhost', user='appuser', password='', database=''):
         self.__host = host
         self.__user = user
         self.__password = password
@@ -31,6 +31,7 @@ class Mysql(object):
     def _open(self):
         try:
             conn = MySQLdb.connect(host=self.__host, user=self.__user, password=self.__password, database=self.__database)
+            
             self.__connection = conn
             self.__cursor = conn.cursor()
         except MySQLdb.Error as err:
