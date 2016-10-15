@@ -16,9 +16,16 @@ def get_players_playing():
             select * from schedule
             where gm_date <= curdate()
             """ 
-    print select_sql
-    print db_execute(select_sql)
+    #print select_sql
+    #print db_execute(select_sql)
 
 connection = Mysql(host='localhost', user='appuser', password=base64.b64decode('YXBwdXNlcg=='), database='ffbdev')
-print connection.select('schedule','where gm_date <= curdate()')
+
+#print connection.select('schedule','gm_date <= curdate()')
+now = datetime.datetime.now()
+end = now.strftime('%H:%M:%S')
+start = (now - datetime.timedelta(hours = 4)).strftime('%H:%M:%S')
+where = "gm_date = curdate() and gm_time between cast('%s' as time) and cast('%s' as time)" %(start, end)
+subselect = "(select team from schedule where " + where + ')'
+print connection.select('players', 'team in ' + subselect, 'player_id')
 get_players_playing()

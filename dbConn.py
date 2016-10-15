@@ -13,6 +13,7 @@ class Mysql(object):
     __user = None
     __password = None
     __database = None
+    __dict = None
     
     __cursor = None
     __connection = None
@@ -22,18 +23,22 @@ class Mysql(object):
             cls.__instance = super(Mysql, cls).__new__(cls, *args, **kwargs)
         return cls.__instance
     
-    def __init__(self, host = 'localhost', user='appuser', password='', database=''):
+    def __init__(self, host = 'localhost', user='appuser', password='', database='', dict = False):
         self.__host = host
         self.__user = user
         self.__password = password
         self.__database = database
+        self.__dict = dict
         
     def _open(self):
         try:
-            conn = MySQLdb.connect(host=self.__host, user=self.__user, password=self.__password, database=self.__database)
+            conn = MySQLdb.connect(host=self.__host, user=self.__user, passwd=self.__password, db=self.__database)
             
             self.__connection = conn
-            self.__cursor = conn.cursor()
+            if self.__dict:
+                self.__cursor = conn.cursor(cursorclass=MySQLdb.cursors.DictCursor)
+            else:
+                self.__cursor = conn.cursor()
         except MySQLdb.Error as err:
             if err.errno == errorcode.ER_DBACCESS_DENIED_ERROR:
                 print 'Oops, looks like there''s a problem with your username or password'
@@ -71,19 +76,20 @@ class Mysql(object):
         keys = args
         l = len(keys) - 1
         for i, key in enumerate(keys):
-            query += "'"+key+"'"
-            if i < 1:
+            query += ""+key+""
+            if i < l:
                 query += ','
         query += " FROM %s" % table
         if where:
             query += " WHERE %s" %where
-        
+        print query
         if not self.__cursor:
             self._open()
         self.__cursor.execute(query)
         #self.__connection.commit()
-        for result in self.__cursor.stored_results():
-            result = result.fetchall()
+        #for row in self.__cursor.fetchall():
+        #    print row
+        result = self.__cursor.fetchall()
         self._close()
         return result
     
@@ -94,7 +100,7 @@ class Mysql(object):
         l = len(keys) - 1
         for i, key in enumerate(keys):
             query += "'"+key+"'%s"
-            if i < 1:
+            if i < l:
                 query += ","
         query += " WHERE index =%d" %index
         if not self.__cursor:
