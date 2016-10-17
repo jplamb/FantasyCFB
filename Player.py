@@ -6,7 +6,7 @@
 
 import MySQLdb
 import base64
-from dbConn import *
+from dbConn import Mysql
 from datetime import datetime
 
 # Player class interfaces with database to retrieve and store data
@@ -20,28 +20,24 @@ class Player:
 		self.ID = ID
 		self.url = url
 		
-		#self.table_name = "_".join(name.lower().split(" "))
 		self.table_name = "player_stats"
 		
 		# Create data table if it doesn't exist
-		if not check_table_exists(self.table_name):
-			self.create_player_stats_table(self.table_name)
-		# For testing purposes
-		"""
-		else:
-			self.open_db_connection()
-			sql = "drop table %s" % self.table_name
-			cursor.execute(sql)
-			self.create_player_stats_table(self.table_name)
-		"""
+		connection = Mysql(host='localhost', user='appuser', password=base64.b64decode('YXBwdXNlcg=='), database='ffbdev')
+		table_exists_where = "table_name = '%s'" %(self.table_name)
+		#table_exists = connection.select('information_schema.tables', table_exists_where, 'table_name')
+		table_exists = connection.call_store_procedure('check_table_exists', self.table_name)
+		print 'sda' + table_exists
+		if not table_exists:
+			connection.call_store_procedure('create_player_stats')
 				
 	# Insert or Update rows of gamelog into db
 	# Input: player's gamelog
 	# Returns: 
 	def set_stats(self, stats):
 		# Make sure the table exists first
-		if not check_table_exists(self.table_name):
-			self.create_player_stats_table(self.table_name)			
+		#if not check_table_exists(self.table_name):
+		#	self.create_player_stats_table(self.table_name)			
 		
 		# Loop through each row in the gamelog 
 		#for row in range(1,len(gamelog)):
@@ -58,10 +54,14 @@ class Player:
 						week = %s """
 						
 			# Execute row check
-			row_check = row_check % (self.ID, week)
-			
+			print 'asd'
+			connection = Mysql(host='localhost', user='appuser', password=base64.b64decode('YXBwdXNlcg=='), database='ffbdev')
+			row_check_where = "player_id = %s and week = %s" %(self.ID, week)
+			row_check = connection.select('player_stats', row_check_where, '(1)')
+			print 'test' + row_check
+			quit()
 			# Set update/insert base sql strings
-			if db_execute(row_check):
+			if row_check:
 				self.update_game_row(stats, week, game)
 			else:
 				self.insert_game_row(stats, week, game)

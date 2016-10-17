@@ -1,4 +1,4 @@
-from dbConn import db_execute, check_table_exists
+from dbConn import Mysql
 from lxml import html
 from bs4 import BeautifulSoup
 import requests

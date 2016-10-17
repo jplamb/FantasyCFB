@@ -122,9 +122,11 @@ class Mysql(object):
         if not self.__cursor:
             self.open()
         self.__cursor.callproc(name, args)
+        print 'adsasdasd'
         self.__connection.commit()
-        for result in self.__session.stored_results():
-            result_sp = result.fetchall()
+        #for result in self.__session.stored_results():
+        #    result_sp = result.fetchall()
+        result_sp = self.__cursor.fetchall()
         self._close()
         return result_sp
         

@@ -3,7 +3,7 @@
 # Created by John Lamb
 ########################################
 
-from dbConn import *
+from dbConn import Mysql
 from gSheet import get_values
 
 class Roster:

@@ -11,13 +11,14 @@ from Schedule import *
 from getPlayerStats import get_player_stats
 import Player
 import datetime
-from dbConn import db_execute, close_db, db_commit, open_db_connection
+from dbConn import Mysql
 from teams import record_team
 import Roster
 from calcPoints import calc_all_player_points, calc_team_def_points, post_team_points
 import grequests
 import requests
 from multiprocessing.dummy import Pool
+import base64
 
 players = {}
 REQUESTS_SIZE = 100
@@ -108,12 +109,9 @@ def con_get_players():
 def con_get_player_stats():
 	starttime = datetime.datetime.now()
 	
-	sql = """
-			select name, player_id, url
-			from players 
-			"""
-	result = db_execute(sql)
-
+	connection = Mysql(host='localhost', user='appuser', password=base64.b64decode('YXBwdXNlcg=='), database='ffbdev')
+	result = connection.select('players','player_id = 556465', 'name', 'player_id', 'url')
+	
 	# initialize values for visualizing progress
 	#count = 1
 	#total = len(result)
@@ -171,10 +169,11 @@ def save_player_stats(r, **kwargs):
 	
 	# parse page content for stats
 	stats = get_player_stats(r.content)
-	
+
 	# save player stats
 	if stats:
 		temp_player = Player.Player(name, play_id, r.url)
+		print 'stats' + stats
 		temp_player.set_stats(stats)
 	
 	#count += 1
@@ -196,10 +195,6 @@ def con_update_schedule():
 		schedule_url = roster_urls[count].replace("roster", "schedule")
 		temp_team = Schedule(team, schedule_url)
 		temp_team.get_schedule(schedule_url)
-		
-		if count % 25 == 0:
-			db_commit()
-	db_commit()
 
 # Outputs schedule as a text file
 def con_print_schedule():
@@ -218,7 +213,6 @@ def con_update_rosters():
 	for team in teams:
 		temp_team = Roster.Roster(team)
 		temp_team.update_roster(week)
-	db_commit()
 
 # Retrieve this weeks stats and save them to roster table
 def con_post_team_stats():
@@ -228,11 +222,6 @@ def con_post_team_stats():
 	for team in teams:
 		temp_team = Roster.Roster(team)
 		players = temp_team.team_players_bnch + temp_team.team_players_strt
-		for player in players:
-			pass
-			#temp_player = Player()
-			#temp_player.get_points()
-			#temp_team.set_player_points(week, player)
 
 def con_calculate_points():
 	teams = ['Team_John_B', 'Team_Jack', 'Team_John_L', 'Team_Mike', 'Team_Scott', 'Team_Frankie']
@@ -262,11 +251,9 @@ print datetime.datetime.now().time()
 
 # run console
 #test_mode = run_test()
-open_db_connection(False)
 command = run_console(action_choice)
 perform_action(command)
 
-close_db()
 print 'Closing..'
 print datetime.datetime.now().time()
 

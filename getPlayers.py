@@ -8,7 +8,7 @@ from lxml import html
 from bs4 import BeautifulSoup, Tag
 import requests
 import re
-from dbConn import db_execute
+from dbConn import Mysql
 
 # Retrieve all power five conference teams' rosters
 # Inputs: URL string to page with all college football teams' rosters

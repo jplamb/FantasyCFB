@@ -1,5 +1,5 @@
 # Calculate player points
-from dbConn import db_execute, db_dict_execute, check_table_exists, db_commit
+from dbConn import Mysql
 import os
 
 # Main method
