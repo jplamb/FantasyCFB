@@ -23,13 +23,11 @@ class Player:
 		self.table_name = "player_stats"
 		
 		# Create data table if it doesn't exist
-		connection = Mysql(host='localhost', user='appuser', password=base64.b64decode('YXBwdXNlcg=='), database='ffbdev')
+		self.connection = Mysql(host='localhost', user='appuser', password=base64.b64decode('YXBwdXNlcg=='), database='ffbdev')
 		table_exists_where = "table_name = '%s'" %(self.table_name)
-		#table_exists = connection.select('information_schema.tables', table_exists_where, 'table_name')
-		table_exists = connection.call_store_procedure('check_table_exists', self.table_name)
-		print 'sda' + table_exists
+		table_exists = self.connection.call_store_procedure('check_table_exists', self.table_name)
 		if not table_exists:
-			connection.call_store_procedure('create_player_stats')
+			self.connection.call_store_procedure('create_player_stats')
 				
 	# Insert or Update rows of gamelog into db
 	# Input: player's gamelog
@@ -55,10 +53,9 @@ class Player:
 						
 			# Execute row check
 			print 'asd'
-			connection = Mysql(host='localhost', user='appuser', password=base64.b64decode('YXBwdXNlcg=='), database='ffbdev')
 			row_check_where = "player_id = %s and week = %s" %(self.ID, week)
-			row_check = connection.select('player_stats', row_check_where, '(1)')
-			print 'test' + row_check
+			row_check = self.connection.select('player_stats', row_check_where, "player_id")
+			print row_check
 			quit()
 			# Set update/insert base sql strings
 			if row_check:

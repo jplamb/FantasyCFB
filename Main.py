@@ -111,7 +111,7 @@ def con_get_player_stats():
 	
 	connection = Mysql(host='localhost', user='appuser', password=base64.b64decode('YXBwdXNlcg=='), database='ffbdev')
 	result = connection.select('players','player_id = 556465', 'name', 'player_id', 'url')
-	
+	#connection._close()
 	# initialize values for visualizing progress
 	#count = 1
 	#total = len(result)
@@ -173,7 +173,6 @@ def save_player_stats(r, **kwargs):
 	# save player stats
 	if stats:
 		temp_player = Player.Player(name, play_id, r.url)
-		print 'stats' + stats
 		temp_player.set_stats(stats)
 	
 	#count += 1

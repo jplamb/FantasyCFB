@@ -87,9 +87,10 @@ class Mysql(object):
             self._open()
         self.__cursor.execute(query)
         #self.__connection.commit()
-        #for row in self.__cursor.fetchall():
-        #    print row
-        result = self.__cursor.fetchall()
+        result = ()
+        for row in self.__cursor.fetchall():
+            print row
+        #result = self.__cursor.fetchall()
         self._close()
         return result
     
@@ -104,29 +105,29 @@ class Mysql(object):
                 query += ","
         query += " WHERE index =%d" %index
         if not self.__cursor:
-            self.open()
+            self._open()
         self.__cursor.execute(query, values)
-        self.__connection.commit()
-        self._close()
+        #self.__connection.commit()
+        #self._close()
         
     def delete(self, table, index):
         query = "DELETE FROM %s WHERE uuid=%d" % (table, index)
         if not self.__cursor:
-            self.open()
+            self._open()
         self.__cursor.execute(query)
-        self.__connection.commit()
-        self._close()
+        #self.__connection.commit()
+        #self._close()
     
     def call_store_procedure(self, name, *args):
         result_sp = None
         if not self.__cursor:
-            self.open()
+            self._open()
         self.__cursor.callproc(name, args)
-        print 'adsasdasd'
-        self.__connection.commit()
-        #for result in self.__session.stored_results():
-        #    result_sp = result.fetchall()
+        #self.__connection.commit()
+        for result in self.__session.stored_results():
+            print  result.fetchall()
         result_sp = self.__cursor.fetchall()
-        self._close()
+        #self._close()
+        print result_sp
         return result_sp
         

@@ -27,5 +27,8 @@ end = now.strftime('%H:%M:%S')
 start = (now - datetime.timedelta(hours = 4)).strftime('%H:%M:%S')
 where = "gm_date = curdate() and gm_time between cast('%s' as time) and cast('%s' as time)" %(start, end)
 subselect = "(select team from schedule where " + where + ')'
-print connection.select('players', 'team in ' + subselect, 'player_id')
-get_players_playing()
+#print connection.select('players', 'team in ' + subselect, 'player_id')
+#get_players_playing()
+#connection = Mysql(host='localhost', user='appuser', password=base64.b64decode('YXBwdXNlcg=='), database='ffbdev')
+
+print connection.call_store_procedure('check_table_exists','player_stats')
