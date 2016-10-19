@@ -22,8 +22,8 @@ class Mysql(object):
         if not cls.__instance:
             cls.__instance = super(Mysql, cls).__new__(cls, *args, **kwargs)
         return cls.__instance
-    
-    def __init__(self, host = 'localhost', user='appuser', password='', database='', dict = False):
+
+    def __init__(self, host = 'localhost', user='appuser', password=base64.b64decode('YXBwdXNlcg=='), database='ffbdev', dict = False):
         self.__host = host
         self.__user = user
         self.__password = password
@@ -83,15 +83,15 @@ class Mysql(object):
         if where:
             query += " WHERE %s" %where
         print query
-        if not self.__cursor:
-            self._open()
+        #if not self.__cursor:
+        self._open()
         self.__cursor.execute(query)
-        #self.__connection.commit()
-        result = ()
-        for row in self.__cursor.fetchall():
-            print row
-        #result = self.__cursor.fetchall()
-        self._close()
+        self.__connection.commit()
+        #for result in self.__cursor.stored_results():
+        #    result = result.fetchall()
+        result = self.__cursor.fetchall()
+        #self.__cursor.nextset()
+        #self._close()
         return result
     
     def update(self, table, index, **kwargs):
@@ -120,14 +120,18 @@ class Mysql(object):
     
     def call_store_procedure(self, name, *args):
         result_sp = None
-        if not self.__cursor:
-            self._open()
-        self.__cursor.callproc(name, args)
-        #self.__connection.commit()
-        for result in self.__session.stored_results():
-            print  result.fetchall()
-        result_sp = self.__cursor.fetchall()
+        #if not self.__cursor:
+        self._open()
+        try:
+            self.__cursor.callproc(name, args)
+            #self.__connection.commit()
+            #for result in self.__session.stored_results():
+            #    print result
+            #    result_sp = result.fetchall()
+            result_sp = self.__cursor.fetchall()
+        except MySQLdb.Error as err:
+            print err
         #self._close()
-        print result_sp
+        #print result_sp
         return result_sp
         

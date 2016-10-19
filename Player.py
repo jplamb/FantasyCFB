@@ -23,20 +23,18 @@ class Player:
 		self.table_name = "player_stats"
 		
 		# Create data table if it doesn't exist
-		self.connection = Mysql(host='localhost', user='appuser', password=base64.b64decode('YXBwdXNlcg=='), database='ffbdev')
+		#conn = Mysql(host='localhost', user='appuser', password=base64.b64decode('YXBwdXNlcg=='), database='ffbdev')
+		self.conn = Mysql()
 		table_exists_where = "table_name = '%s'" %(self.table_name)
-		table_exists = self.connection.call_store_procedure('check_table_exists', self.table_name)
+		table_exists = self.conn.call_store_procedure('check_table_exists', self.table_name)
+		
 		if not table_exists:
-			self.connection.call_store_procedure('create_player_stats')
+			self.conn.call_store_procedure('create_player_stats')
 				
 	# Insert or Update rows of gamelog into db
 	# Input: player's gamelog
 	# Returns: 
 	def set_stats(self, stats):
-		# Make sure the table exists first
-		#if not check_table_exists(self.table_name):
-		#	self.create_player_stats_table(self.table_name)			
-		
 		# Loop through each row in the gamelog 
 		#for row in range(1,len(gamelog)):
 		for game in range(len(stats['date'])):
@@ -44,19 +42,11 @@ class Player:
 			#week = gamelog[row][0]
 			week = stats['date'][game]
 			week = self.getWeek(week)
-
-			# SQL to check if row already exists in db
-			row_check = """select (1)
-						from player_stats 
-						where player_id = %s and 
-						week = %s """
 						
 			# Execute row check
-			print 'asd'
-			row_check_where = "player_id = %s and week = %s" %(self.ID, week)
-			row_check = self.connection.select('player_stats', row_check_where, "player_id")
-			print row_check
-			quit()
+			row_check_where = "player_id = %s and week = %s limit 1" %(self.ID, week)
+			row_check = self.conn.select('player_stats', row_check_where, "'x'")
+			
 			# Set update/insert base sql strings
 			if row_check:
 				self.update_game_row(stats, week, game)
