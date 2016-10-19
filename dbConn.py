@@ -66,7 +66,7 @@ class Mysql(object):
             self._open()
         
         self.__cursor.execute(query, values)
-        self.__connection.commit()
+        #self.__connection.commit()
         self._close()
         return self.__session.lastrowid
     
@@ -94,28 +94,31 @@ class Mysql(object):
         #self._close()
         return result
     
-    def update(self, table, index, **kwargs):
+    def update(self, table, where=None, **kwargs):
         query = "UPDATE %s SET" %table
         keys = kwargs.keys()
         values = kwargs.values()
         l = len(keys) - 1
         for i, key in enumerate(keys):
-            query += "'"+key+"'%s"
+            query += "'"+key+"'=%s"
             if i < l:
                 query += ","
-        query += " WHERE index =%d" %index
-        if not self.__cursor:
-            self._open()
+        #query += " WHERE index =%d" %index
+        if not where:
+            return 
+        query += where
+        #if not self.__cursor:
+        self._open()
         self.__cursor.execute(query, values)
         #self.__connection.commit()
         #self._close()
         
     def delete(self, table, index):
         query = "DELETE FROM %s WHERE uuid=%d" % (table, index)
-        if not self.__cursor:
-            self._open()
+        #if not self.__cursor:
+        self._open()
         self.__cursor.execute(query)
-        #self.__connection.commit()
+        self.__connection.commit()
         #self._close()
     
     def call_store_procedure(self, name, *args):
