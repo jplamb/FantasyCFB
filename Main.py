@@ -22,6 +22,8 @@ import base64
 
 players = {}
 REQUESTS_SIZE = 100
+TOTAL_PLAYERS = 0
+CURRENT_COUNT = 0
 # Run console 
 # inputs actions as list of choices (strs)
 # returns selected action as int
@@ -109,8 +111,11 @@ def con_get_players():
 def con_get_player_stats():
 	starttime = datetime.datetime.now()
 	
-	connection = Mysql(host='localhost', user='appuser', password=base64.b64decode('YXBwdXNlcg=='), database='ffbdev')
-	result = connection.select('players','player_id = 556465', 'name', 'player_id', 'url')
+	#connection = Mysql(host='localhost', user='appuser', password=base64.b64decode('YXBwdXNlcg=='), database='ffbdev')
+	connection = Mysql()
+	where = 'player_id = 556465'
+	result = connection.select('players',None, 'name', 'player_id', 'url')
+	TOTAL_PLAYERS = len(result)
 	#connection._close()
 	# initialize values for visualizing progress
 	#count = 1
@@ -150,6 +155,8 @@ def con_get_player_stats():
 def save_player_stats(r, **kwargs):
 	#for r in responses:
 	# pull id out of url
+	#CURRENT_COUNT += 1
+	
 	if not r:
 		return
 	
@@ -165,7 +172,8 @@ def save_player_stats(r, **kwargs):
 	
 	# print progress
 	#print str(count) + ' / ' + str(total) + '  ' + name + '   ' + str(play_id)
-	print name + '    '  + str(play_id)
+	#print name + '    '  + str(play_id) + '    ' + str(CURRENT_COUNT) + ' / ' + str(TOTAL_PLAYERS) 
+	print name + '     ' + str(play_id)
 	
 	# parse page content for stats
 	stats = get_player_stats(r.content)

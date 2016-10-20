@@ -45,7 +45,7 @@ class Player:
 						
 			# Execute row check
 			row_check_where = "player_id = %s and week = %s limit 1" %(self.ID, week)
-			row_check = self.conn.select('player_stats', row_check_where, "'x'")
+			row_check = self.conn.select('player_stats', row_check_where, "'x'")				
 			
 			# Set update/insert base sql strings
 			if row_check:
@@ -54,74 +54,24 @@ class Player:
 				self.insert_game_row(stats, week, game)
 					
 	def update_game_row(self, stats, week, game):
-		update_sql = """update %s set """ % self.table_name
-
-		for cat in stats.keys():
-			update_sql += self.get_corres_col_name(cat) + '='
-			stat = stats[cat][game]
-			
-			if self.is_number(stat):
-				update_sql += "%s," % str(stat)
-			else:
-				stat = str(stat).translate(None, "'_")
-				update_sql += "'%s'," % str(stat)
-		
-		update_sql = update_sql[:-1] + "where week = %s and player_id = %s" %(week, self.ID)
-		db_execute(update_sql)
+		#update_sql = """update %s set """ % self.table_name
+		stats_c = {}
+		for k in stats.keys():
+			k_p = self.get_corres_col_name(k)
+			stats_c[k_p] = stats[k][game]
+		stats_c['player_name'] = self.name
+		update_where = 'week = %s and player_id = %s' %(week, self.ID)
+		self.conn.update('player_stats', where=update_where, **stats_c)
 	
 	def insert_game_row(self, stats, week, game):
-		# Base string for insert statement
-		insert_sql = 'insert into %s (player_id, player_name, week,' % self.table_name
-
-		# Generate insert statement base with columns
-		for cat in stats.keys():
-			insert_sql += self.get_corres_col_name(cat) + ','
-		insert_sql = insert_sql[:-1] + """) values (%s, '%s', %s, """ %(self.ID, self.name, week)
-		
-		for cat in stats.keys():
-			stat = stats[cat][game]
-			
-			if self.is_number(stat):
-				insert_sql += str(stat) + ','
-			else:
-				stat = str(stat).translate(None, "'_")
-				insert_sql += "'%s'," % stat
-		
-		insert_sql = insert_sql[:-1] + ')'
-		db_execute(insert_sql)
-			
-			# If already in db, run update
-			#if db_execute(row_check):
-			#	for count, stat in enumerate(gamelog[row]):
-			#		update_sql += self.get_corres_col_name(str(gamelog[0][count]).replace(" ","_").lower()) + '='
-					
-					# Make sure string type columns take in data as string format
-			#		if isinstance(stat, basestring):
-			#			stat = str(stat).translate(None, "',_")
-			#			update_sql += "'%s'," % str(stat) 
-			#		else:
-			#			update_sql += "%s," % str(stat)
-			#	update_sql = update_sql[:-1] + "where week = %s and player_id = %s" %(week, self.ID)
-			#	db_execute(update_sql)
-				
-			# If not, run insert
-			#else:
-			#	for stat in gamelog[row]:
-					# Check if state needs to be input as string
-			#		if isinstance(stat, basestring):
-			#			stat = str(stat).translate(None, "',_")
-			#			insert_sql += "'%s'," % str(stat)
-			#		else:
-			#			insert_sql += str(stat) + ','
-			#	insert_sql = insert_sql[:-1] + ')'
-			#	db_execute(insert_sql)
-	
-	def is_number(self, numb):
-		try:
-			float(numb)
-			return True
-		except ValueError:
-			return False
+		stats_c = {}
+		for k in stats.keys():
+			k_p = self.get_corres_col_name(k)
+			stats_c[k_p] = stats[k][game]
+		stats_c['player_id'] = self.ID
+		stats_c['week'] = week
+		stats_c['player_name'] = self.name
+		self.conn.insert('player_stats', **stats_c)
 		
 	# Maps html stat name with db column name
 	# Input: html stat column as string
@@ -201,69 +151,6 @@ class Player:
 		result = float(db_execute(select_sql))
 				
 		return result
-			
-	# create player's stats table
-	# Input: player table name
-	# Returns:
-	def create_player_stats_table(self, name):
-		
-		create_string = """create table %s (
-			week int not null,
-			player_id int not null,
-			game_date varchar(10),
-			player_name varchar(30),
-			opp varchar(30),
-			result varchar(20),
-			victory varchar(1),
-			completions int not null default 0,
-			pass_att int not null default 0,
-			pass_yards int not null default 0,
-			compl_pct float not null default 0,
-			pass_long int not null default 0,
-			pass_td int not null default 0,
-			int_thrown int not null default 0,
-			pass_rate float not null default 0,
-			raw_qbr float not null default 0,
-			adj_qbr float not null default 0,
-			rush_att int not null default 0,
-			rush_yards int not null default 0,
-			rush_avg float not null default 0,
-			rush_long int not null default 0,
-			rush_td int not null default 0,
-			receptions int not null default 0,
-			rec_yards int not null default 0,
-			rec_avg float not null default 0,
-			rec_long int not null default 0,
-			rec_td int not null default 0,
-			fg_1_19 int not null default 0,
-			fg_20_29 int not null default 0,
-			fg_30_39 int not null default 0,
-			fg_40_49 int not null default 0,
-			fg_50_plus int not null default 0,
-			fg_made int not null default 0,
-			fg_pct float not null default 0,
-			fg_long int not null default 0,
-			xp_made int not null default 0,
-			xp_att int not null default 0,
-			kick_points int not null default 0,
-			def_tot_tack int not null default 0,
-			def_unassist_tack int not null default 0,
-			def_assist_tack int not null default 0,
-			def_sacks float not null default 0,
-			def_force_fmble int not null default 0,
-			def_int_ret_yrds int not null default 0,
-			def_int_ret_avg int not null default 0,
-			def_int_ret_long int not null default 0,
-			def_int_ret_td int not null default 0,
-			def_pass_defend int not null default 0,
-			punt_total int not null default 0,
-			punt_avg float not null default 0,
-			punt_long int not null default 0,
-			punt_total_yrds int not null default 0,
-			primary key (week, player_id)
-			)""" % name
-		
-		db_execute(create_string)
 		
 	def getWeek(self, date):
 		(month, day, year) = date.split('/')

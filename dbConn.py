@@ -53,22 +53,25 @@ class Mysql(object):
     
     def insert(self, table, *args, **kwargs):
         values = None
-        query = "INSERT INTO %S " % table
+        query = "INSERT INTO %s " % table
         if kwargs:
             keys = kwargs.keys()
             values = kwargs.values()
-            query += "(" + ",".join(["'%s'"]*len(keys)) % tuple(keys) + ") VALUES (" + ",".join(["%s"]*len(values)) + ")"
+            query += "(" + ",".join(["%s"]*len(keys)) % tuple(keys) + ") VALUES (" + ",".join(["%s"]*len(values)) + ")"
         elif args:
             values = args
             query += " VALUES (" + ",".join(["%s"]*len(values)) + ")"
-            
-        if not self.__cursor:
+        try:
+        #if not self.__cursor:
             self._open()
         
-        self.__cursor.execute(query, values)
-        #self.__connection.commit()
+            self.__cursor.execute(query, values)
+            #print self.__cursor.rowcount
+        except MySQLdb.Error as err:
+            print err
+        self.__connection.commit()
         self._close()
-        return self.__session.lastrowid
+        #return self.__session.lastrowid
     
     def select(self, table, where=None, *args):
         result = None
@@ -82,34 +85,39 @@ class Mysql(object):
         query += " FROM %s" % table
         if where:
             query += " WHERE %s" %where
-        print query
         #if not self.__cursor:
-        self._open()
-        self.__cursor.execute(query)
-        self.__connection.commit()
+        try:
+            self._open()
+            self.__cursor.execute(query)
+            self.__connection.commit()
         #for result in self.__cursor.stored_results():
         #    result = result.fetchall()
-        result = self.__cursor.fetchall()
+            result = self.__cursor.fetchall()
+        except MySQLdb.Error as err:
+            print err
         #self.__cursor.nextset()
         #self._close()
         return result
     
     def update(self, table, where=None, **kwargs):
-        query = "UPDATE %s SET" %table
+        query = "UPDATE %s SET " %table
         keys = kwargs.keys()
         values = kwargs.values()
         l = len(keys) - 1
         for i, key in enumerate(keys):
-            query += "'"+key+"'=%s"
+            query += key+"=%s"
             if i < l:
                 query += ","
         #query += " WHERE index =%d" %index
         if not where:
             return 
-        query += where
+        query += " WHERE " + where
         #if not self.__cursor:
-        self._open()
-        self.__cursor.execute(query, values)
+        try:
+            self._open()
+            self.__cursor.execute(query, values)
+        except MySQLdb.Error as err:
+            print err
         #self.__connection.commit()
         #self._close()
         
