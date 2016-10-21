@@ -64,7 +64,6 @@ class Mysql(object):
         try:
         #if not self.__cursor:
             self._open()
-        
             self.__cursor.execute(query, values)
             #print self.__cursor.rowcount
         except MySQLdb.Error as err:
@@ -121,8 +120,10 @@ class Mysql(object):
         #self.__connection.commit()
         #self._close()
         
-    def delete(self, table, index):
-        query = "DELETE FROM %s WHERE uuid=%d" % (table, index)
+    def delete(self, table, where=None):
+        query = "DELETE FROM %s " % (table)
+        if where:
+            query += "WHERE " + where
         #if not self.__cursor:
         self._open()
         self.__cursor.execute(query)

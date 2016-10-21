@@ -17,27 +17,12 @@ class Roster:
 		#self.table_name = team_name.replace(' ', '_')
 		self.table_name = 'roster'
 		
-		if not check_table_exists(self.table_name):
-			self.create_team_roster()
+		self.conn = Mysql()
 		
-		#update_roster_players(team_players)
-	
-	# create roster table
-	def create_team_roster(self):
+		table_exists = self.conn.call_store_procedure('check_table_exists', self.table_name)
 		
-		create_string = """ create table roster (
-				week int not null,
-				fant_team varchar(30) not null,
-				player_name varchar(20) not null,
-				pos varchar(2),
-				is_starting varchar(1) not null,
-				points_elig varchar(1) not null,
-				points float,
-				team varchar(20),
-				opp varchar(20),
-				primary key (week, fant_team, player_name)
-				)""" % (self.table_name)
-		db_execute(create_string)
+		if not table_exists:
+			self.conn.call_store_procedure('create_roster')
 	
 	# interface with google sheet to pull in roster
 	def get_team_players(self, starters):
@@ -51,53 +36,40 @@ class Roster:
 	# Delete all rows and add players, set elig and start to 'N'
 	# inputs: team players as list (not attribute of class in case called externally
 	def update_roster(self, week):
-		delete_sql = """
-			delete from %s
-			where week = %s and fant_team = '%s'
-			""" %(self.table_name, week, self.team_name)
-		
-		db_execute(delete_sql)
+		delete_where = "week = %s and fant_team = '%s'" %(week, self.team_name)
+		self.conn.delete(self.table_name, delete_where)
 		
 		for player in self.team_players_strt:
 			self.insert_player(week, True, player)
 		for player in self.team_players_bnch:
 			self.insert_player(week, False, player)
 	
-	# Future method to update players stats 
-	def update_roster_stats(self, week):
-		for player in self.team_players:
-			pass
-		# get latest game log
-		# run sql to update current stats
-	
 	# Add players to table
 	def insert_player(self, week, start, *player):
+		table_values = {}
 		player = player[0]
 		
 		pos = player[0]
-		player_nm = player[1]
-		team = player[2]
-		opp = player[3]
-		points_elig = player[4][0]
+		table_values['week'] = week
+		table_values['fant_team'] = self.team_name		
+		table_values['pos'] = pos
+		table_values['player_name'] = player[1]
+		table_values['points_elig'] = player[4][0]
+		table_values['team'] = player[2]
+		table_values['opp'] = player[3]
+		table_values['points'] = 0
 
 		if start:
-			starting = 'Y'
+			table_values['is_starting'] = 'Y'
 		else:
-			starting = 'N'
+			table_values['is_starting'] = 'N'
 			
 		if pos.lower() == 'kicker':
-			pos = 'PK'
+			table_values['pos'] = 'PK'
 		if pos.lower() == 'defense':
-			pos = 'D'
-			
-		insert_sql = """
-				insert into %s
-				(week, fant_team, player_name, points_elig, points, pos, is_starting, team, opp)
-				values
-				(%s, '%s', '%s', '%s', 0, '%s', '%s', '%s','%s')
-				"""%(self.table_name, week, self.team_name, player_nm, points_elig,  pos, starting, team, opp)
-		db_execute(insert_sql)
-
+			table_values['pos'] = 'D'
+		
+		self.conn.insert(self.table_name, **table_values)
 			
 
 

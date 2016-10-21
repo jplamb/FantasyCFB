@@ -25,7 +25,6 @@ class Player:
 		# Create data table if it doesn't exist
 		#conn = Mysql(host='localhost', user='appuser', password=base64.b64decode('YXBwdXNlcg=='), database='ffbdev')
 		self.conn = Mysql()
-		table_exists_where = "table_name = '%s'" %(self.table_name)
 		table_exists = self.conn.call_store_procedure('check_table_exists', self.table_name)
 		
 		if not table_exists:
