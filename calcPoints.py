@@ -4,12 +4,19 @@ import os
 
 # Main method
 def calc_all_player_points(week):
+    conn = Mysql()
     
-    # check if both the points for stat and player points tables exists
-    if not check_table_exists('points_stats'):
-        create_points_stats_table()
-    if not check_table_exists('points'):
-        create_points_table()
+    ps_table_exists = conn.call_store_procedure('check_table_exists', 'points_stats')
+
+    if not ps_table_exists:
+        conn.call_store_procedure('create_points_stats')
+
+    points_table_exists = conn.call_store_procedure('check_table_exists', 'points')
+    
+    if not points_table_exists:
+        conn.call_store_procedure('create_points')
+    
+
         
     # retrieve the points for stats table (as dict)
     points_stats = get_points_stats_table()[0]
@@ -332,18 +339,6 @@ def get_player_ids():
             """
     return db_execute(select_sql)
 
-def create_points_table():
-    create_string = """
-        create table points (
-        week int not null,
-        player_id int not null,
-        total_points float not null,
-        elig_points float not null,
-        unelig_points float not null,
-        primary key (week, player_id)
-         )"""
-    db_execute(create_string)
-
 def input_points_stats():
     dict = {}
     content = [line.rstrip('\n') for line in open('points-stats.txt')]
@@ -384,68 +379,6 @@ def insert_points_stats(dict):
 
     db_execute(insert_sql)
     
-    
-def create_points__stats_table():
-    create_string = """create table points_stats (
-            effdt date not null,
-			completions float not null default 0,
-			pass_att float not null default 0,
-			pass_yards float not null default 0,
-			compl_pct float not null default 0,
-			pass_long float not null default 0,
-			pass_td float not null default 0,
-			int_thrown float not null default 0,
-			pass_rate float not null default 0,
-			raw_qbr float not null default 0,
-			adj_qbr float not null default 0,
-			rush_att float not null default 0,
-            qb_rush float not null default 0,
-			rush_yards float not null default 0,
-			rush_avg float not null default 0,
-			rush_long float not null default 0,
-			rush_td float not null default 0,
-			receptions float not null default 0,
-			rec_yards float not null default 0,
-			rec_avg float not null default 0,
-			rec_long float not null default 0,
-			rec_td float not null default 0,
-			fg_1_19 float not null default 0,
-			fg_20_29 float not null default 0,
-			fg_30_39 float not null default 0,
-			fg_40_49 float not null default 0,
-			fg_50_plus float not null default 0,
-			fg_miss float not null default 0,
-			fg_pct float not null default 0,
-			fg_long float not null default 0,
-			xp_made float not null default 0,
-			xp_miss float not null default 0,
-			kick_points float not null default 0,
-			def_tot_tack float not null default 0,
-			def_unassist_tack float not null default 0,
-			def_assist_tack float not null default 0,
-			def_sacks float not null default 0,
-			def_force_fmble float not null default 0,
-			def_int_ret_yrds float not null default 0,
-			def_int_ret_avg float not null default 0,
-			def_int_ret_long float not null default 0,
-			def_int_ret_td float not null default 0,
-			def_pass_defend float not null default 0,
-			punt_total float not null default 0,
-			punt_avg float not null default 0,
-			punt_long float not null default 0,
-			punt_total_yrds float not null default 0,
-            points_all_0 float not null default 0,
-            points_all_6 float not null default 0,
-            points_all_13 float not null default 0,
-            points_all_17 float not null default 0,
-            points_all_27 float not null default 0,
-            points_all_34 float not null default 0,
-            points_all_45 float not null default 0,
-            points_all_plus float not null default 0,
-            def_int float not null default 0,
-			primary key (effdt))
-            """
-    db_execute(create_string)
 
 def print_all_points(week):
     
