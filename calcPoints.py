@@ -17,7 +17,6 @@ def calc_all_player_points(week):
         conn.call_store_procedure('create_points')
     
 
-        
     # retrieve the points for stats table (as dict)
     points_stats = get_points_stats_table()[0]
 
@@ -58,15 +57,18 @@ def calc_all_player_points(week):
             
         handle_player_points(player, week, total_points, elig_points, unelig_points)
     
-    db_commit()
     print_all_points(week)
 
 def calc_team_def_points(week):
-    # check if both the points for stat and player points tables exists
-    if not check_table_exists('points_stats'):
-        create_points_stats_table()
-    if not check_table_exists('points'):
-        create_points_table()
+    ps_table_exists = conn.call_store_procedure('check_table_exists', 'points_stats')
+
+    if not ps_table_exists:
+        conn.call_store_procedure('create_points_stats')
+
+    points_table_exists = conn.call_store_procedure('check_table_exists', 'points')
+    
+    if not points_table_exists:
+        conn.call_store_procedure('create_points')
         
     # retrieve the points for stats table (as dict)
     points_stats = get_points_stats_table()[0]
@@ -77,29 +79,6 @@ def calc_team_def_points(week):
         print team
         total_points = 0
         
-        game_results = get_team_result(team, week)
-        
-        if not game_results:
-            continue
-        
-        #game_result, opp = game_results[0]
-
-        #for x in range(len(game_results)):
-        #    if '-' not in game_result:
-        #        game_result, opp = game_results[x]
-        
-        #x = 0
-        #while x < len(game_results) and '-' not in game_result:
-        #    game_result, opp = game_results[x]
-        #    print game_result
-        #    x+=1
-        #if '-' not in game_result:
-        #    continue
-        #(points_all1, points_all2) = game_result.split('-')
-        
-        #victory = ''
-        #while victory != 'Y' and victory != 'N':
-        #    victory = raw_input('Did %s win?\n'%(team)).strip().upper()
         victoryRes = get_team_points_allowed(team, week)
         if victoryRes:
             (win, game_points) = victoryRes[0]
@@ -136,8 +115,6 @@ def calc_team_def_points(week):
         else:
             total_points = points_stats['points_all_plus']
         
-        print 'points_all',
-        print total_points, points_all
         int_caught = float(get_interceptions(team,week)[0][0])
         sacks = float(get_sacks(team, week)[0][0])
         fumbles = float(get_forced_fumbles(team, week)[0][0])
@@ -171,46 +148,36 @@ def calc_team_def_points(week):
             uPoints = total_points
         print team + ' saving'
         handle_player_points(team_id, week, total_points, ePoints, uPoints)
-    db_commit()
         
 def get_forced_fumbles(team, week):
-    select_sql = """
-            select sum(def_force_fmble) from player_stats where player_id in
+    fumble_where = """player_id in
             (select player_id from players where team = '%s' and (position <> 'QB'
-            or position is NULL)) and week = %s
-            """%(team, week)
-    return db_execute(select_sql)
+            or position is NULL)) and week = %s"""%(team, week)
+            
+    return conn.select('player_stats', fumble_where, 'sum(def_force_fmble)')[0][0]
 
 def get_interceptions(team, week):
-    select_sql = """
-            select sum(int_thrown) from player_stats where player_id in
+    inter_where = """player_id in
             (select player_id from players where team = '%s' and (position <> 'QB'
-            or position is null)) and week = %s
-            """%(team, week)
-    return db_execute(select_sql)
+            or position is null)) and week = %s"""%(team, week)
+            
+    return conn.select('player_stats', inter_where, 'sum(int_thrown)')[0][0]
 
 def get_int_td(team, week):
-    select_sql = """
-            select sum(def_int_ret_td) from player_stats where player_id in
-            (select player_id from players where team = '%s' and (position <> 'QB'
+    int_td_where = """team = '%s' and (position <> 'QB'
             or position is null)) and week = %s
             """%(team, week)
-    return db_execute(select_sql)
+            
+    return conn.select('player_stats',int_td_where, 'sum(def_int_ret_td)')[0][0]
 
 def get_sacks(team, week):
-    select_sql = """
-            select sum(def_sacks) from player_stats where player_id in
+    sack_where = """player_id in
             (select player_id from players where team = '%s' and (position <> 'QB'
             or position is null)) and week = %s
             """%(team, week)
-    return db_execute(select_sql)
-        
-def get_team_result(team, week):
-    select_sql = """
-            select result,opp from player_stats where player_id in
-            (select player_id from players where team = '%s') and week = %s
-            """%(team, week)
-    return db_execute(select_sql)
+            
+    return conn.select('player_stats', sack_where, 'sum(def_sacks)')[0][0]
+
 
 def get_team_points_allowed(team, week):
     select_sql = """
@@ -412,3 +379,5 @@ def print_all_points(week):
     f.close()
     
 #print_all_points(1)
+
+print get_team_result('Virginia Tech', 7)
