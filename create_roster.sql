@@ -1,7 +1,8 @@
 DELIMITER $$
 
 DROP PROCEDURE IF EXISTS `create_roster` $$
-CREATE DEFINER=`user`@`%` PROCEDURE `create_roster`()
+USE ffbdev$$
+CREATE PROCEDURE create_roster()
 BEGIN
 
 create table roster (
@@ -14,7 +15,7 @@ create table roster (
 				points float,
 				team varchar(20),
 				opp varchar(20),
-				primary key (week, fant_team, player_name);
+				primary key (week, fant_team, player_name));
             
 END;$$
 

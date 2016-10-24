@@ -180,40 +180,29 @@ def get_sacks(team, week):
 
 
 def get_team_points_allowed(team, week):
-    select_sql = """
-            select victory, result from player_stats
-            where player_id in (select player_id from players where team = '%s')
+    points_all_where = """player_id in
+            (select player_id from players where team = '%s')
             and week = %s and victory is not null
             """%(team, week)
-    return db_execute(select_sql)
+            
+    points_all_select = ['victory', 'result']
     
+    return conn.select('player_stats', points_all_where, *points_all_select)[0]
+
 def get_teams():
-    select_sql = """
-            select team, team_id from teams
-            """
-    return db_execute(select_sql)
+    teams_select = ['team', 'team_id']
+    
+    return conn.select('teams', where=None, *teams_select)
+
 
 def post_team_points(week):
-    select_sql = """
-                select x.player_name, pt.player_id, pt.total_points, x.is_starting, x.points_elig, x.fant_team
-                from points pt
-                inner join players play on play.player_id = pt.player_id
-                inner join roster x on x.player_name = play.name and play.team = x.team
-                and x.week = pt.week
-                where pt.week = %s                
-                """%(week)
-                
-    result = db_execute(select_sql)
+    result = conn.call_store_procedure('get_team_points', week)
+
     print_team_points(result, week)
-    select_sql = """
-                select x.player_name, pt.player_id,pt.total_points, x.is_starting, x.points_elig, x.fant_team
-                from roster x
-                inner join teams tm on tm.team = x.player_name
-                inner join points pt on pt.player_id = tm.team_id and x.week = pt.week
-                where x.pos = 'D' and pt.week = %s
-                """%(week)
-    result = db_execute(select_sql)
-    print_team_points(result, week)
+    
+    result_def = conn.call_store_procedure('get_team_def_points', week)
+
+    print_team_points(result_def, week)
     
 def print_team_points(result, week):
     filename = 'week' + str(week) + '.txt'
@@ -379,5 +368,5 @@ def print_all_points(week):
     f.close()
     
 #print_all_points(1)
-
-print get_team_result('Virginia Tech', 7)
+conn = Mysql()
+print post_team_points(7)
