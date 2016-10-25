@@ -192,7 +192,7 @@ def get_team_points_allowed(team, week):
 def get_teams():
     teams_select = ['team', 'team_id']
     
-    return conn.select('teams', where=None, *teams_select)
+    return conn.select('teams', where=None, *teams_select)[0]
 
 
 def post_team_points(week):
@@ -216,51 +216,41 @@ def print_team_points(result, week):
     f.close()
 
 def get_team_elig(team, week):
-    select_sql = """
-                select (1) from player_stats where week = %s and player_id in
+    elig_where = """week = %s and player_id in
                 (select player_id from players where team = '%s') and opp in
                 (select team from teams)
                 """%(week, team)
-    return db_execute(select_sql)
+    return conn.select('player_stats', elig_where, "'x'")[0]
                 
 def get_player_elig(player_id, week):
-    select_sql = """
-                select (1) from player_stats
-                where player_id = %s and week = %s
+    elig_where = """player_id = %s and week = %s
                 and opp in (select team from teams)
                 """%(player_id, week)
-    return db_execute(select_sql)
+    
+    return conn.select('player_stats', elig_where, "'x'")[0]
 
 def get_player_game_log(player_id, week):
-    check_row_sql = """select (1) from player_stats
-                where player_id = %s and week = %s
+    check_where = """player_id = %s and week = %s
                 """ %(player_id, week)
-    if not db_execute(check_row_sql):
+    if not conn.select('player_stats', check_where, "'x'")[0]:
         return None
     
-    select_sql = """
-        select * from player_stats
-        where player_id = %s and week = %s
-        """%(player_id, week)
-        
-    game_log = db_dict_execute(select_sql)[0]
+    dict_conn = Mysql(dict=True)
+    
+    play_where = 'player_id = %s and week = %s'%(player_id, week)
+    game_log = dict_conn.select('player_stats', play_where, *'*')[0]
 
     return game_log
 
 def get_points_stats_table():
-    select_sql = """
-                select * from points_stats where effdt =
-                    (select max(effdt) from points_stats)
-                """
-    return db_dict_execute(select_sql)
-        
-def handle_player_points(player_id, week, tPoints, ePoints, uPoints):
-    check_row_sql = """
-            select (1) from points
-            where player_id = %s and week = %s
-            """%(player_id, week)
+    dict_conn = Mysql(dict=True)
+    stats_where = "effdt = (select max(effdt) from points_stats)"
+    return dict_conn.select('points_stats', stats_where, '*')[0]
 
-    if not db_execute(check_row_sql):
+def handle_player_points(player_id, week, tPoints, ePoints, uPoints):
+    check_where = "player_id = %s and week = %s" %(player_id, week)
+
+    if not conn.select('points', check_where, "'x'")[0]:
         insert_player_points(player_id, week, tPoints, ePoints, uPoints)
     else:
         update_player_points(player_id, week, tPoints, ePoints, uPoints)
@@ -369,4 +359,4 @@ def print_all_points(week):
     
 #print_all_points(1)
 conn = Mysql()
-print post_team_points(7)
+print get_player_game_log(556465, 8)
