@@ -1,32 +1,37 @@
 # Calculate player points
 from dbConn import Mysql
 import os
+import settings
 
 # Main method
 def calc_all_player_points(week):
-    conn = Mysql()
+    #conn = Mysql()
     
-    ps_table_exists = conn.call_store_procedure('check_table_exists', 'points_stats')
+    ps_table_exists = settings.conn.call_store_procedure('check_table_exists', 'points_stats')
 
     if not ps_table_exists:
-        conn.call_store_procedure('create_points_stats')
+        settings.conn.call_store_procedure('create_points_stats')
 
-    points_table_exists = conn.call_store_procedure('check_table_exists', 'points')
+    points_table_exists = settings.conn.call_store_procedure('check_table_exists', 'points')
     
     if not points_table_exists:
         conn.call_store_procedure('create_points')
     
 
     # retrieve the points for stats table (as dict)
-    points_stats = get_points_stats_table()[0]
+    points_stats = get_points_stats_table()
 
     # retrieve all player ids
     player_ids = get_player_ids()
     # for each player, calculate points
     for player in player_ids:
         player = player[0]
-
+        
+        play_points = {}
         total_points = 0
+        
+        play_points['player_id'] = player
+        play_points['week'] = week
 
         game_log = get_player_game_log(player, week)
 
@@ -44,18 +49,19 @@ def calc_all_player_points(week):
         if game_log['fg_made'] and len(game_log['fg_made']) > 1 and '/' in game_log['fg_made']:
             (made, att) = game_log['fg_made'].split('/')
             total_points += (float(att) - float(made)) * points_stats['fg_miss']
-            
+        
+        play_points['total_points'] = total_points  
         points_elig = get_player_elig(player, week)
         
-        elig_points = 0
-        unelig_points = 0
+        play_points['elig_points'] = 0
+        play_points['unelig_points'] = 0
         
         if points_elig:
-            elig_points = total_points
+            play_points['elig_points'] = total_points
         else:
-            unelig_points = total_points
+            play_points['unelig_points'] = total_points
             
-        handle_player_points(player, week, total_points, elig_points, unelig_points)
+        handle_player_points(**play_points)
     
     print_all_points(week)
 
@@ -77,7 +83,12 @@ def calc_team_def_points(week):
 
     for team, team_id in teams:
         print team
+        
+        play_points = {}
         total_points = 0
+        
+        play_points['player_id'] = team_id
+        play_points['week'] = week
         
         victoryRes = get_team_points_allowed(team, week)
         if victoryRes:
@@ -122,32 +133,24 @@ def calc_team_def_points(week):
         
         if int_caught:
             total_points += int_caught * points_stats['def_int']
-            print 'int',
-            print total_points, int_caught
         if sacks:
             total_points += sacks * points_stats['def_sacks']
-            print 'sacks',
-            print total_points, sacks
         if fumbles:
             total_points += fumbles * points_stats['def_force_fmble']
-            print 'fumbles',
-            print total_points, fumbles
         if int_td:
             total_points += int_td * points_stats['def_int_ret_td']
-            print 'int td',
-            print total_points, int_td
         
-        ePoints = 0
-        uPoints = 0
+        play_points['total_points'] = total_points
+        play_points['elig_points'] = 0
+        play_points['unelig_points'] = 0
         
         team_elig = get_team_elig(team, week)
         
         if team_elig:
-            ePoints = total_points
+            play_points['elig_points'] = total_points
         else:
-            uPoints = total_points
-        print team + ' saving'
-        handle_player_points(team_id, week, total_points, ePoints, uPoints)
+            play_points['unelig_points'] = total_points
+        handle_player_points(**play_points)
         
 def get_forced_fumbles(team, week):
     fumble_where = """player_id in
@@ -247,104 +250,50 @@ def get_points_stats_table():
     stats_where = "effdt = (select max(effdt) from points_stats)"
     return dict_conn.select('points_stats', stats_where, '*')[0]
 
-def handle_player_points(player_id, week, tPoints, ePoints, uPoints):
-    check_where = "player_id = %s and week = %s" %(player_id, week)
+def handle_player_points(**play_points):
+    check_where = "player_id = %s and week = %s" %(play_points['player_id'], play_points['week'])
 
     if not conn.select('points', check_where, "'x'")[0]:
-        insert_player_points(player_id, week, tPoints, ePoints, uPoints)
+        insert_player_points(**play_points)
     else:
-        update_player_points(player_id, week, tPoints, ePoints, uPoints)
+        update_player_points(**play_points)
 
-def insert_player_points(player_id, week, tPoints, ePoints, uPoints):
-    insert_sql = """
-                insert into points(
-                week,
-                player_id,
-                total_points,
-                elig_points,
-                unelig_points)
-                values
-                (%s, %s, %s, %s, %s)
-                """%(week, player_id, tPoints, ePoints, uPoints)
-    db_execute(insert_sql)
-                
+def insert_player_points(**play_points):
+    conn.insert('points', **play_points)              
 
 def update_player_points(player_id, week, tPoints, ePoints, uPoints):
-    update_sql = """
-                update points
-                set total_points = %s,
-                elig_points = %s,
-                unelig_points = %s
-                where player_id = %s and week = %s
-                """%(tPoints, ePoints, uPoints, player_id, week)
-    db_execute(update_sql)
-    
+    points_where = "player_id = %s and week = %s" %(play_points['player_id'], play_points['week'])
+    play_points.pop('player_id', 0)
+    play_points.pop('week', 0)
+    conn.update('points', points_where, **play_points)
+      
 def get_player_ids():
-    select_sql = """
-            select player_id from players
-            """
-    return db_execute(select_sql)
+    return conn.select('players',None, 'player_id')[0]
 
 def input_points_stats():
-    dict = {}
+    config = {}
     content = [line.rstrip('\n') for line in open('points-stats.txt')]
     
     for line in content:
         (stat, p) = line.split(':', 2)
-        dict[stat] = p.strip()
+        config[stat] = p.strip()
     
-    insert_points_stats(dict)
+    insert_points_stats(**config)
     
-def insert_points_stats(dict):
-    check_row_exists_sql = """
-                select (1) from points_stats
-                where effdt = str_to_date(%s, '%%m/%%d/%%Y')
-                """ %(dict['effdt'])
+def insert_points_stats(**config):
+    row_where = "effdt = str_to_date(%s, '%%m/%%d/%%Y')" %(config['effdt'])
     
-    if db_execute(check_row_exists_sql):
-        delete_sql = """ delete from points_stats
-                    where effdt = str_to_date(%s, '%%m/%%d/%%Y')"""%(dict['effdt'])
-        db_execute(delete_sql)
+    if select.conn('points_stats', row_where, "'x'")[0]:
+        conn.delete('points_stats', row_where)
         
-    date = dict.pop('effdt', None)
-
-    insert_sql = """
-            insert into points_stats (effdt,"""
+    date = config.pop('effdt', None)
     
-    for k in dict.keys():
-        insert_sql += k + ','
-    
-    insert_sql = insert_sql[:-1]
-    insert_sql += """) values (str_to_date('%s', '%%m/%%d/%%Y'),"""%(date)
-    
-    
-    for k in dict.keys():
-        insert_sql += dict[k] + ','
-        
-    insert_sql = insert_sql[:-1] + ')'
-
-    db_execute(insert_sql)
+    conn.insert('points_stats', **config)
     
 
 def print_all_points(week):
     
-    select_sql = """
-            select pt.week,
-                case when rost.fant_team is NULL then ' ' else rost.fant_team end,
-                pt.total_points, pt.elig_points, pt.unelig_points,
-                play.name, play.position, play.team, st.pass_yards, st.pass_td,
-                st.int_thrown, st.rush_yards, st.rush_td, st.rec_yards, st.rec_td,
-                st.fg_1_19, st.fg_20_29, st.fg_30_39, st.fg_40_49, st.fg_50_plus,
-                st.fg_made, st.xp_made, st.xp_att, st.def_sacks, st.def_force_fmble,
-                st.def_int_ret_td
-            from points pt
-            inner join player_stats st on st.player_id = pt.player_id and pt.week = st.week
-            left join roster rost on rost.player_name = st.player_name and rost.week = st.week
-            left join players play on play.player_id = st.player_id
-            where pt.week = %s
-            """%(week)
-    
-    results = db_execute(select_sql)
+    results = conn.call_store_procedure('print_all_points')[0]
     
     filename = 'week' + str(week) + 'allstats.txt'
     f = open(filename,'w')
@@ -357,6 +306,3 @@ def print_all_points(week):
             f.write('%s, '%(stat))
     f.close()
     
-#print_all_points(1)
-conn = Mysql()
-print get_player_game_log(556465, 8)

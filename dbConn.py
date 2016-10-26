@@ -69,7 +69,7 @@ class Mysql(object):
         except MySQLdb.Error as err:
             print err
         self.__connection.commit()
-        self._close()
+        #self._close()
         #return self.__session.lastrowid
     
     def select(self, table, where=None, *args):

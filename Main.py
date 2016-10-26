@@ -19,6 +19,7 @@ import grequests
 import requests
 from multiprocessing.dummy import Pool
 import base64
+import settings
 
 players = {}
 REQUESTS_SIZE = 100
@@ -234,7 +235,6 @@ def con_calculate_points():
 	teams = ['Team_John_B', 'Team_Jack', 'Team_John_L', 'Team_Mike', 'Team_Scott', 'Team_Frankie']
 	 
 	week = int(raw_input('What week is it? \n'))
-	
 	calc_all_player_points(week)
 	calc_team_def_points(week)
 	
