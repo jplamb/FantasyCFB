@@ -95,7 +95,8 @@ class Mysql(object):
         except MySQLdb.Error as err:
             print err
         #self.__cursor.nextset()
-        #self._close()
+        if self.__dict:
+            self.__dict = False
         return result
     
     def update(self, table, where=None, **kwargs):

@@ -1,21 +1,19 @@
 # Calculate player points
 from dbConn import Mysql
 import os
-import settings
 
 # Main method
 def calc_all_player_points(week):
-    #conn = Mysql()
     
-    ps_table_exists = settings.conn.call_store_procedure('check_table_exists', 'points_stats')
+    ps_table_exists = __conn__.call_store_procedure('check_table_exists', 'points_stats')
 
     if not ps_table_exists:
-        settings.conn.call_store_procedure('create_points_stats')
+        __conn__.call_store_procedure('create_points_stats')
 
-    points_table_exists = settings.conn.call_store_procedure('check_table_exists', 'points')
+    points_table_exists = __conn__.call_store_procedure('check_table_exists', 'points')
     
     if not points_table_exists:
-        conn.call_store_procedure('create_points')
+        __conn__.call_store_procedure('create_points')
     
 
     # retrieve the points for stats table (as dict)
@@ -25,7 +23,9 @@ def calc_all_player_points(week):
     player_ids = get_player_ids()
     # for each player, calculate points
     for player in player_ids:
-        player = player[0]
+        print player
+        quit()
+        player = player['player_id']
         
         play_points = {}
         total_points = 0
@@ -66,23 +66,27 @@ def calc_all_player_points(week):
     print_all_points(week)
 
 def calc_team_def_points(week):
-    ps_table_exists = conn.call_store_procedure('check_table_exists', 'points_stats')
+    ps_table_exists = __conn__.call_store_procedure('check_table_exists', 'points_stats')
 
     if not ps_table_exists:
-        conn.call_store_procedure('create_points_stats')
+        __conn__.call_store_procedure('create_points_stats')
 
-    points_table_exists = conn.call_store_procedure('check_table_exists', 'points')
+    points_table_exists = __conn__.call_store_procedure('check_table_exists', 'points')
     
     if not points_table_exists:
-        conn.call_store_procedure('create_points')
+        __conn__.call_store_procedure('create_points')
         
     # retrieve the points for stats table (as dict)
-    points_stats = get_points_stats_table()[0]
+    points_stats = get_points_stats_table()
     
     teams = get_teams()
-
-    for team, team_id in teams:
-        print team
+    print teams
+    
+    #for team, team_id in teams:
+    for team in teams:
+        team_name = team['team']
+        team_id = team['team_id']
+        print team_name, team_id
         
         play_points = {}
         total_points = 0
@@ -90,7 +94,7 @@ def calc_team_def_points(week):
         play_points['player_id'] = team_id
         play_points['week'] = week
         
-        victoryRes = get_team_points_allowed(team, week)
+        victoryRes = get_team_points_allowed(team_name, week)
         if victoryRes:
             (win, game_points) = victoryRes[0]
             if 'OT' in game_points:
@@ -98,7 +102,7 @@ def calc_team_def_points(week):
                 
             (points_all1, points_all2) = game_points.split('-')
 
-        print team, win, game_points
+        print team_name, win, game_points
         
         if not win:
             points_all = 42
@@ -126,10 +130,10 @@ def calc_team_def_points(week):
         else:
             total_points = points_stats['points_all_plus']
         
-        int_caught = float(get_interceptions(team,week)[0][0])
-        sacks = float(get_sacks(team, week)[0][0])
-        fumbles = float(get_forced_fumbles(team, week)[0][0])
-        int_td = float(get_int_td(team, week)[0][0])
+        int_caught = float(get_interceptions(team_name,week)[0][0])
+        sacks = float(get_sacks(team_name, week)[0][0])
+        fumbles = float(get_forced_fumbles(team_name, week)[0][0])
+        int_td = float(get_int_td(team_name, week)[0][0])
         
         if int_caught:
             total_points += int_caught * points_stats['def_int']
@@ -144,7 +148,7 @@ def calc_team_def_points(week):
         play_points['elig_points'] = 0
         play_points['unelig_points'] = 0
         
-        team_elig = get_team_elig(team, week)
+        team_elig = get_team_elig(team_name, week)
         
         if team_elig:
             play_points['elig_points'] = total_points
@@ -157,21 +161,21 @@ def get_forced_fumbles(team, week):
             (select player_id from players where team = '%s' and (position <> 'QB'
             or position is NULL)) and week = %s"""%(team, week)
             
-    return conn.select('player_stats', fumble_where, 'sum(def_force_fmble)')[0][0]
+    return __conn__.select('player_stats', fumble_where, 'sum(def_force_fmble)')[0][0]
 
 def get_interceptions(team, week):
     inter_where = """player_id in
             (select player_id from players where team = '%s' and (position <> 'QB'
             or position is null)) and week = %s"""%(team, week)
             
-    return conn.select('player_stats', inter_where, 'sum(int_thrown)')[0][0]
+    return __conn__.select('player_stats', inter_where, 'sum(int_thrown)')[0][0]
 
 def get_int_td(team, week):
     int_td_where = """team = '%s' and (position <> 'QB'
             or position is null)) and week = %s
             """%(team, week)
             
-    return conn.select('player_stats',int_td_where, 'sum(def_int_ret_td)')[0][0]
+    return __conn__.select('player_stats',int_td_where, 'sum(def_int_ret_td)')[0][0]
 
 def get_sacks(team, week):
     sack_where = """player_id in
@@ -179,7 +183,7 @@ def get_sacks(team, week):
             or position is null)) and week = %s
             """%(team, week)
             
-    return conn.select('player_stats', sack_where, 'sum(def_sacks)')[0][0]
+    return __conn__.select('player_stats', sack_where, 'sum(def_sacks)')[0][0]
 
 
 def get_team_points_allowed(team, week):
@@ -190,20 +194,20 @@ def get_team_points_allowed(team, week):
             
     points_all_select = ['victory', 'result']
     
-    return conn.select('player_stats', points_all_where, *points_all_select)[0]
+    return __conn__.select('player_stats', points_all_where, *points_all_select)
 
 def get_teams():
     teams_select = ['team', 'team_id']
     
-    return conn.select('teams', where=None, *teams_select)[0]
+    return __conn__.select('teams', None, *teams_select)
 
 
 def post_team_points(week):
-    result = conn.call_store_procedure('get_team_points', week)
+    result = __conn__.call_store_procedure('get_team_points', week)
 
     print_team_points(result, week)
     
-    result_def = conn.call_store_procedure('get_team_def_points', week)
+    result_def = __conn__.call_store_procedure('get_team_def_points', week)
 
     print_team_points(result_def, week)
     
@@ -223,52 +227,53 @@ def get_team_elig(team, week):
                 (select player_id from players where team = '%s') and opp in
                 (select team from teams)
                 """%(week, team)
-    return conn.select('player_stats', elig_where, "'x'")[0]
+    return __conn__.select('player_stats', elig_where, "'x'")[0]
                 
 def get_player_elig(player_id, week):
     elig_where = """player_id = %s and week = %s
                 and opp in (select team from teams)
                 """%(player_id, week)
     
-    return conn.select('player_stats', elig_where, "'x'")[0]
+    return __conn__.select('player_stats', elig_where, "'x'")[0]
 
 def get_player_game_log(player_id, week):
     check_where = """player_id = %s and week = %s
                 """ %(player_id, week)
-    if not conn.select('player_stats', check_where, "'x'")[0]:
+    if not __conn__.select('player_stats', check_where, "'x'"):
         return None
     
     dict_conn = Mysql(dict=True)
     
     play_where = 'player_id = %s and week = %s'%(player_id, week)
     game_log = dict_conn.select('player_stats', play_where, *'*')[0]
-
     return game_log
 
 def get_points_stats_table():
     dict_conn = Mysql(dict=True)
+    print dict_conn
     stats_where = "effdt = (select max(effdt) from points_stats)"
     return dict_conn.select('points_stats', stats_where, '*')[0]
 
 def handle_player_points(**play_points):
     check_where = "player_id = %s and week = %s" %(play_points['player_id'], play_points['week'])
 
-    if not conn.select('points', check_where, "'x'")[0]:
+    if not __conn__.select('points', check_where, "'x'")[0]:
         insert_player_points(**play_points)
     else:
         update_player_points(**play_points)
 
 def insert_player_points(**play_points):
-    conn.insert('points', **play_points)              
+    __conn__.insert('points', **play_points)              
 
 def update_player_points(player_id, week, tPoints, ePoints, uPoints):
     points_where = "player_id = %s and week = %s" %(play_points['player_id'], play_points['week'])
     play_points.pop('player_id', 0)
     play_points.pop('week', 0)
-    conn.update('points', points_where, **play_points)
+    __conn__.update('points', points_where, **play_points)
       
 def get_player_ids():
-    return conn.select('players',None, 'player_id')[0]
+    print __conn__
+    return __conn__.select('players',None, 'player_id')
 
 def input_points_stats():
     config = {}
@@ -283,18 +288,17 @@ def input_points_stats():
 def insert_points_stats(**config):
     row_where = "effdt = str_to_date(%s, '%%m/%%d/%%Y')" %(config['effdt'])
     
-    if select.conn('points_stats', row_where, "'x'")[0]:
-        conn.delete('points_stats', row_where)
+    if select.__conn__('points_stats', row_where, "'x'")[0]:
+        __conn__.delete('points_stats', row_where)
         
     date = config.pop('effdt', None)
     
-    conn.insert('points_stats', **config)
-    
+    __conn__.insert('points_stats', **config) 
 
 def print_all_points(week):
     
-    results = conn.call_store_procedure('print_all_points')[0]
-    
+    results = __conn__.call_store_procedure('print_all_points', week)
+
     filename = 'week' + str(week) + 'allstats.txt'
     f = open(filename,'w')
     
@@ -305,4 +309,5 @@ def print_all_points(week):
         for stat in row:
             f.write('%s, '%(stat))
     f.close()
-    
+
+__conn__ = Mysql(dict=False)
