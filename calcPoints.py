@@ -23,9 +23,8 @@ def calc_all_player_points(week):
     player_ids = get_player_ids()
     # for each player, calculate points
     for player in player_ids:
-        print player
-        quit()
-        player = player['player_id']
+        print player[0]
+        player = player[0]
         
         play_points = {}
         total_points = 0
@@ -234,7 +233,7 @@ def get_player_elig(player_id, week):
                 and opp in (select team from teams)
                 """%(player_id, week)
     
-    return __conn__.select('player_stats', elig_where, "'x'")[0]
+    return __conn__.select('player_stats', elig_where, "'x'")
 
 def get_player_game_log(player_id, week):
     check_where = """player_id = %s and week = %s
@@ -257,7 +256,7 @@ def get_points_stats_table():
 def handle_player_points(**play_points):
     check_where = "player_id = %s and week = %s" %(play_points['player_id'], play_points['week'])
 
-    if not __conn__.select('points', check_where, "'x'")[0]:
+    if not __conn__.select('points', check_where, "'x'"):
         insert_player_points(**play_points)
     else:
         update_player_points(**play_points)
@@ -265,7 +264,7 @@ def handle_player_points(**play_points):
 def insert_player_points(**play_points):
     __conn__.insert('points', **play_points)              
 
-def update_player_points(player_id, week, tPoints, ePoints, uPoints):
+def update_player_points(**play_points):
     points_where = "player_id = %s and week = %s" %(play_points['player_id'], play_points['week'])
     play_points.pop('player_id', 0)
     play_points.pop('week', 0)
