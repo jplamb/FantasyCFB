@@ -82,10 +82,8 @@ def calc_team_def_points(week):
     print teams
     
     #for team, team_id in teams:
-    for team in teams:
-        team_name = team['team']
-        team_id = team['team_id']
-        print team_name, team_id
+    for team, team_id in teams:
+        print team, team_id
         
         play_points = {}
         total_points = 0
@@ -93,7 +91,7 @@ def calc_team_def_points(week):
         play_points['player_id'] = team_id
         play_points['week'] = week
         
-        victoryRes = get_team_points_allowed(team_name, week)
+        victoryRes = get_team_points_allowed(team, week)
         if victoryRes:
             (win, game_points) = victoryRes[0]
             if 'OT' in game_points:
@@ -101,7 +99,7 @@ def calc_team_def_points(week):
                 
             (points_all1, points_all2) = game_points.split('-')
 
-        print team_name, win, game_points
+        print team, win, game_points
         
         if not win:
             points_all = 42
@@ -129,10 +127,10 @@ def calc_team_def_points(week):
         else:
             total_points = points_stats['points_all_plus']
         
-        int_caught = float(get_interceptions(team_name,week)[0][0])
-        sacks = float(get_sacks(team_name, week)[0][0])
-        fumbles = float(get_forced_fumbles(team_name, week)[0][0])
-        int_td = float(get_int_td(team_name, week)[0][0])
+        int_caught = float(get_interceptions(team,week))
+        sacks = float(get_sacks(team, week))
+        fumbles = float(get_forced_fumbles(team, week))
+        int_td = float(get_int_td(team, week))
         
         if int_caught:
             total_points += int_caught * points_stats['def_int']
@@ -147,7 +145,7 @@ def calc_team_def_points(week):
         play_points['elig_points'] = 0
         play_points['unelig_points'] = 0
         
-        team_elig = get_team_elig(team_name, week)
+        team_elig = get_team_elig(team, week)
         
         if team_elig:
             play_points['elig_points'] = total_points
@@ -159,7 +157,8 @@ def get_forced_fumbles(team, week):
     fumble_where = """player_id in
             (select player_id from players where team = '%s' and (position <> 'QB'
             or position is NULL)) and week = %s"""%(team, week)
-            
+    print __conn__.select('player_stats', fumble_where, 'sum(def_force_fmble)')[0][0]
+    
     return __conn__.select('player_stats', fumble_where, 'sum(def_force_fmble)')[0][0]
 
 def get_interceptions(team, week):
@@ -170,7 +169,8 @@ def get_interceptions(team, week):
     return __conn__.select('player_stats', inter_where, 'sum(int_thrown)')[0][0]
 
 def get_int_td(team, week):
-    int_td_where = """team = '%s' and (position <> 'QB'
+    int_td_where = """player_id in
+            (select player_id from players where team = '%s' and (position <> 'QB'
             or position is null)) and week = %s
             """%(team, week)
             
@@ -224,9 +224,9 @@ def print_team_points(result, week):
 def get_team_elig(team, week):
     elig_where = """week = %s and player_id in
                 (select player_id from players where team = '%s') and opp in
-                (select team from teams)
+                (select team from teams) limit 1
                 """%(week, team)
-    return __conn__.select('player_stats', elig_where, "'x'")[0]
+    print __conn__.select('player_stats', elig_where, "'x'")
                 
 def get_player_elig(player_id, week):
     elig_where = """player_id = %s and week = %s
