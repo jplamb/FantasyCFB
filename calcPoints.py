@@ -23,7 +23,6 @@ def calc_all_player_points(week):
     player_ids = get_player_ids()
     # for each player, calculate points
     for player in player_ids:
-        print player[0]
         player = player[0]
         
         play_points = {}
@@ -79,7 +78,6 @@ def calc_team_def_points(week):
     points_stats = get_points_stats_table()
     
     teams = get_teams()
-    print teams
     
     #for team, team_id in teams:
     for team, team_id in teams:
@@ -157,16 +155,15 @@ def get_forced_fumbles(team, week):
     fumble_where = """player_id in
             (select player_id from players where team = '%s' and (position <> 'QB'
             or position is NULL)) and week = %s"""%(team, week)
-    print __conn__.select('player_stats', fumble_where, 'sum(def_force_fmble)')[0][0]
     
-    return __conn__.select('player_stats', fumble_where, 'sum(def_force_fmble)')[0][0]
+    return __conn__.select('player_stats', fumble_where, 'coalesce(sum(def_force_fmble),0)')[0][0]
 
 def get_interceptions(team, week):
     inter_where = """player_id in
             (select player_id from players where team = '%s' and (position <> 'QB'
             or position is null)) and week = %s"""%(team, week)
             
-    return __conn__.select('player_stats', inter_where, 'sum(int_thrown)')[0][0]
+    return __conn__.select('player_stats', inter_where, 'coalesce(sum(int_thrown),0)')[0][0]
 
 def get_int_td(team, week):
     int_td_where = """player_id in
@@ -174,7 +171,7 @@ def get_int_td(team, week):
             or position is null)) and week = %s
             """%(team, week)
             
-    return __conn__.select('player_stats',int_td_where, 'sum(def_int_ret_td)')[0][0]
+    return __conn__.select('player_stats',int_td_where, 'coalesce(sum(def_int_ret_td),0)')[0][0]
 
 def get_sacks(team, week):
     sack_where = """player_id in
@@ -182,7 +179,7 @@ def get_sacks(team, week):
             or position is null)) and week = %s
             """%(team, week)
             
-    return __conn__.select('player_stats', sack_where, 'sum(def_sacks)')[0][0]
+    return __conn__.select('player_stats', sack_where, 'coalesce(sum(def_sacks),0)')[0][0]
 
 
 def get_team_points_allowed(team, week):
@@ -226,7 +223,7 @@ def get_team_elig(team, week):
                 (select player_id from players where team = '%s') and opp in
                 (select team from teams) limit 1
                 """%(week, team)
-    print __conn__.select('player_stats', elig_where, "'x'")
+    return __conn__.select('player_stats', elig_where, "'x'")
                 
 def get_player_elig(player_id, week):
     elig_where = """player_id = %s and week = %s
@@ -249,7 +246,6 @@ def get_player_game_log(player_id, week):
 
 def get_points_stats_table():
     dict_conn = Mysql(dict=True)
-    print dict_conn
     stats_where = "effdt = (select max(effdt) from points_stats)"
     return dict_conn.select('points_stats', stats_where, '*')[0]
 
@@ -271,7 +267,6 @@ def update_player_points(**play_points):
     __conn__.update('points', points_where, **play_points)
       
 def get_player_ids():
-    print __conn__
     return __conn__.select('players',None, 'player_id')
 
 def input_points_stats():
