@@ -21,37 +21,11 @@ class Schedule:
 		self.team = power_five_team
 		self.url = schedule_url
 		
-		if not check_table_exists("schedule"):
-			self.create_table("schedule")
-	
-
-	# Crete table
-	# inputs: table_name as string
-	def create_table(self, table_name):		
+		self.__conn = Mysql()
+		table_exists = self.__conn.call_store_procedure('check_table_exists', 'schedule')
 		
-		create_sql = """
-				create table %s (
-				team varchar(20) not null,
-				gm_date date not null,
-				opp varchar(20) not null,
-				gm_time time,
-				status varchar(4),
-				power_five varchar(1),
-				win_loss varchar(3),
-				primary key(team, gm_date)
-				)""" % table_name
-		
-		db_execute(create_sql)
-					
-	# Get weekly opponent
-	# inputs: team as string, week as date?
-	def get_opponent(self, team, week):
-		pass 
-	
-	# Get game time
-	# inputs: team as string, week as date?
-	def get_game_time(self, team, week):
-		pass
+		if not table_exists:
+			self.__conn.call_store_procedure('create_player_stats')
 	
 	# Retrieve the schedule and insert into db
 	# inputs: roster_urls as list of strings
@@ -119,110 +93,56 @@ class Schedule:
 		
 		opp_power_five = self.is_power_five_team(opp_id)
 		
-		row_exists_sql = """
-			select (1)
-			from schedule
-			where team = '%s'
-			and gm_date = str_to_date('%s', '%%Y-%%m-%%d' )
-			""" % (self.team, date)
+		row_check_where = "team = '%s' and gm_date = str_to_date('%s', '%%Y-%%m-%%d')" % (self.team, date)
+		row_check = self.__conn.select('schedule', row_check_where, "'x'")
 		
-		if db_execute(row_exists_sql):
-			self.update_schedule(date, opp, status, time, opp_power_five, victory)
+		values = {}
+		values['team'] = self.team
+		values['gm_date'] = date
+		values['opp'] = opp
+		values['status'] = status
+		values['power_five'] = opp_power_five
+		values['win_loss'] = victory
+		values['gm_time'] = time
+		
+		if row_check:
+			self.update_schedule(**values)
 		else:
-			self.insert_schedule(date, opp, status, time, opp_power_five, victory)
+			self.insert_schedule(**values)
 		
 	# Insert schedule into table
 	# inputs: date as formatted string, opp as string, status as string, and time as string
-	def insert_schedule(self, date, opp, status, time, opp_power, victory):
+	def insert_schedule(self, **kwargs):
+		values = kwargs
 		
 		# check if time is TBD or not
-		if time == 'TBD' or time == 'NA':
-			insert_sql = """
-				insert into schedule (
-				team,
-				gm_date,
-				opp,
-				status,
-				power_five,
-				win_loss
-				)
-				values (
-				'%s',
-				str_to_date('%s', '%%Y-%%m-%%d' ),
-				'%s',
-				'%s',
-				'%s',
-				'%s'
-				)
-				""" %(self.team, date, opp, status, opp_power, victory)
+		if values['gm_time'] == 'TBD' or values['gm_time'] == 'NA':
+			values.pop('gm_time',0)
+			self.__conn.insert('schedule', **values)
 		else:
-			insert_sql = """
-				insert into schedule (
-				team,
-				gm_date,
-				opp,
-				gm_time,
-				status,
-				power_five,
-				win_loss
-				)
-				values (
-				'%s',
-				str_to_date('%s', '%%Y-%%m-%%d' ),
-				'%s',
-				time_format('%s', '%%h:%%i %%p'),
-				'%s',
-				'%s',
-				'%s'
-				)
-				""" %(self.team, date, opp, time, status, opp_power, victory)
-		print insert_sql
-		db_execute(insert_sql)
+			self.__conn.insert('schedule', **values)
 	
 	# Update schedule row in table
 	# inputs: date as formatted string, opp as string, status as string, and time as string
-	def update_schedule(self, date, opp, status, time, opp_power, victory):
+	def update_schedule(self, **kwargs):
+		values = kwargs
 		
-		if time == 'TBD' or time == 'NA':
-			update_sql = """
-				update schedule 
-				set 
-				opp = '%s',
-				status = '%s',
-				power_five = '%s',
-				win_loss = '%s'
-				where
-				team = '%s' and
-				gm_date = str_to_date('%s', '%%Y-%%m-%%d' )
-				""" % (opp, status, opp_power, victory, self.team, date)
+		update_where = "team = '%s' and	gm_date = str_to_date('%s', '%%Y-%%m-%%d')" %(self.team, date)
+		
+		if values['gm_time'] == 'TBD' or values['gm_time'] == 'NA':
+			values.pop('gm_time',0)
+			self.__conn.update('schedule', update_where, **values)
 		else:
-			update_sql = """
-				update schedule 
-				set 
-				opp = '%s',
-				gm_time = time_format('%s', '%%h:%%i %%p'),
-				status = '%s',
-				power_five = '%s',
-				win_loss = '%s'
-				where
-				team = '%s' and
-				gm_date = str_to_date('%s', '%%Y-%%m-%%d' )
-				""" % (opp, time, status, opp_power, victory, self.team, date)		
-		print update_sql
-		db_execute(update_sql)
+			self.__conn.update('schedule', update_where, **values)
 		
 	# is team a power five team?
 	# Input team_id as string
 	# returns Y or N 
 	def is_power_five_team(self, team_id):
-		
-		select_sql = """
-				select (1)
-				from teams
-				where team_id = %s
-				""" % (team_id)
-		
-		if db_execute(select_sql):
+		p5_where = "team_id = %s"%(team_id)
+		row_exists = self.__conn.select('teams', p5_where, "'x'")
+
+		if row_exists:
 			return 'Y'
 		else:
 			return 'N'
@@ -266,13 +186,8 @@ class Schedule:
 		f.close()
 		
 	# Returns list of teams in the db which assumes only P5 teams are stored
-	def get_power_five_teams(self):
-		sql = """
-			select team from teams
-			"""
-		teams = db_execute(sql)
-		
-		return teams
+	def get_power_five_teams(self):		
+		return self.__conn.select('teams', None, 'team')
 		
 		
 		
