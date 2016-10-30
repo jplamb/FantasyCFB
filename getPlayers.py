@@ -49,25 +49,6 @@ def get_power_five_roster_links(teamsURL):
 				team_names.append(team_name)
 				roster_links.append(link)
 
-		#parTwoDes = parentTwo.descendants
-		"""for tag in parTwoDes:
-			#print unicode(tag)
-			# Filter out links so only roster links remain
-			if tag is not None and "espn.com" in unicode(tag):
-				#print 'break'
-				#print ''
-				#print tag
-				# Grab URL, remove html tags and text
-				link = re.search("(?P<url>http://espn[^\s]+\")", unicode(tag)).group("url").rstrip('\"')
-				link = link[:41] + "roster/" + link[41:]
-				print link
-				if tag.string is not None and tag.string not in team_names:
-					team_names.append(tag.string)
-					
-				# Exclude duplicates
-				if link not in roster_links:
-					roster_links.append(link)
-			"""
 	return [roster_links, team_names]
 
 # Retrieve team roster
@@ -124,45 +105,26 @@ def add_to_player_table(play_name, play_url, player_id, team, pos):
 	# escape apostrophes in url
 	url = re.sub("[']", "''", play_url)
 	
+	values = {}
+	values['name'] = name
+	values['url'] = url
+	values['team'] = team
+	values['position'] = pos
+	values['player_id'] = player_id
+	
+	conn = Mysql()
+	
 	# check if player already exists in db
-	sql = """
-			select (1)
-			from players
-			where player_id = %s
-			""" % (player_id)
+	row_check_where = "player_id = %s"%(player_id)
+	row_check = conn.select('players', row_check_where, "'x'")
 	
 	# run either update or insert if row exists or not
-	if db_execute(sql):
-		update_sql = """
-			update players
-			set 
-			name = '%s',
-			url = '%s',
-			team = '%s',
-			position = '%s'
-			where 
-			player_id = %s
-			""" % (name, url, team, pos, player_id)
-
-		db_execute(update_sql)
-
+	if row_check:
+		update_where = "player_id = %s"%(values['player_id'])
+		values.pop('player_id', 0)
+		conn.update('players', update_where, **values)
 	else:
-		insert_sql = """
-			insert into players (
-			player_id,
-			name,
-			url,
-			team,
-			position)
-			values (
-			%s,
-			'%s',
-			'%s',
-			'%s',
-			'%s')
-			""" % (player_id, name, url, team, pos)
-
-		db_execute(insert_sql)
+		conn.insert('players', **values)
 
 # Output all players to text file			
 def print_players():
@@ -180,14 +142,3 @@ def print_players():
 		for player in result:
 			f.write('\n%s, %s, %s'%(player[0], player[1], player[2]))
 		f.close()
-		
-# For reference, table structure
-"""
-create table players
-			player_id int not null,
-			name varchar(30),
-			url varchar(150),
-			team varchar(30),
-			position varchar(3)
-			primary key (player_id)
-"""
