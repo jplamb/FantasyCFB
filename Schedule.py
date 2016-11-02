@@ -11,7 +11,7 @@ from bs4 import BeautifulSoup
 import requests
 import re
 from dateutil.parser import parse
-from datetime import date, timedelta
+from datetime import date, timedelta, datetime
 
 class Schedule:
 	
@@ -127,8 +127,12 @@ class Schedule:
 	def update_schedule(self, **kwargs):
 		values = kwargs
 		
-		update_where = "team = '%s' and	gm_date = str_to_date('%s', '%%Y-%%m-%%d')" %(self.team, date)
-		
+		date = datetime.strftime(values['gm_date'], '%Y-%m-%d')
+		#print date
+		#update_where = "team = '%s' and	gm_date = str_to_date('%s', '%%Y-%%m-%%d')" %(self.team, date)
+
+		update_where = "team = '%s' and	gm_date = '%s'" %(self.team, date)
+
 		if values['gm_time'] == 'TBD' or values['gm_time'] == 'NA':
 			values.pop('gm_time',0)
 			self.__conn.update('schedule', update_where, **values)

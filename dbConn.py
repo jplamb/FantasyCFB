@@ -118,7 +118,7 @@ class Mysql(object):
             self.__cursor.execute(query, values)
         except MySQLdb.Error as err:
             print err
-        #self.__connection.commit()
+        self.__connection.commit()
         #self._close()
         
     def delete(self, table, where=None):
