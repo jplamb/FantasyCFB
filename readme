@@ -1,21 +1,13 @@
-The fantasy football program is intended to be both an avenue to learn and an automation of a laborious process.
+Welcome!
 
-I am using this project to learn more about Python and programming in general. At work I develop solutions 
-for a delivered (COTS) product, Since this application is entirely custom here are many challenges and design
-decisions to make that I don't encounter at work.
+The Fantasy Football League of Superb Champions II or (or FFLSCII for short) is currently a
+private fantasy football league. What makes this league special? Well commercial college
+football leagues don't exist. This league is an adaptation of NFL fantasy football for college
+(without any betting). It employs several college specific rules to make competition competitive.
 
-This application will replace my spreadsheet based fantasy football league. Previously I used Excel VBA
-to calculate points and monitor stats for each team. I pulled stats manually. This program will automate
-those tasks.
+This endeavor began as a fun side project managed with Excel VBA scripts. It has morphed into
+much more than that. All of the backend code is written in Python and replaced all of the
+original VBA scripts.
 
-At a minimum the application will:
---Retrieve player stats from espn via web scraping
---Maintain a database of those stats
---Capture teams
---Capture weekly lineups
---Allocate points based on player performance
---Track (display?) standings 
-
-Stretch goals:
---Track stats real time
---Capture or run draft
+My next goal is to launch a custom website to replace the shared Google Doc currently
+serving as our frontend. 
