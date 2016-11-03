@@ -1,12 +1,28 @@
 <html>
 
 <head>
-<title> My first webpage</title>
+<title>Fantasy College Football</title>
 </head>
-
-<body>
-<h1> Hello World!</h1>
-<p> AWS is pretty neat </p>
+<h1>Fantasy Football League of Superb Champions II</h1>
+<body ng-app="FFL" ng-controller="teamsController">
+  <table>
+    <thead>
+      <tr><th colspan="4">Current Standings</th></tr>
+    </thead>
+    <tbody>
+      <tr ng-repeat="team in teamsList">
+        <td>{{$index + 1}}</td>
+        <td>
+          {{team.name}}
+        </td>
+        <td>{{team.points}}</td>
+      </tr>
+    </tbody>
+  </table>
+  <script src="bower_components/angular/angular.js"></script>
+  <script src="bower_components/angular-route/angular-route.js"></script>
+  <script src="app/scripts/app.js"></script>
+  <script src="app/scripts/controllers/teams.js"></script>
 
 </body>
 </html>

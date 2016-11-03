@@ -15,3 +15,4 @@ angular.module('clientApp')
       'Karma'
     ];
   });
+

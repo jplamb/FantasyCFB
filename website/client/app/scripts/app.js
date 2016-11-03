@@ -17,14 +17,15 @@ angular
     'ngResource',
     'ngRoute',
     'ngSanitize',
-    'ngTouch'
-  ])
+    'ngTouch',
+    'teams'
+  ],)
   .config(function ($routeProvider) {
     $routeProvider
       .when('/', {
         templateUrl: 'views/main.html',
-        controller: 'MainCtrl',
-        controllerAs: 'main'
+        controller: ['MainCtrl','teamsController'],
+        controllerAs: ['main','teams']
       })
       .when('/about', {
         templateUrl: 'views/about.html',
