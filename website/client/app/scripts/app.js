@@ -4,7 +4,7 @@
  * @ngdoc overview
  * @name clientApp
  * @description
- * # clientAppnt se
+ * # clientApp
  *
  * Main module of the application.
  */

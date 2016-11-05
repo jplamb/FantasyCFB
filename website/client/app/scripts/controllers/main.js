@@ -14,5 +14,5 @@ angular.module('clientApp')
       'AngularJS',
       'Karma'
     ];
+    this.teams = 42;
   });
-

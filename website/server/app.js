@@ -7,9 +7,10 @@ var bodyParser = require('body-parser');
 
 var index = require('./routes/index');
 var users = require('./routes/users');
-//var errorhandler = require('errorhandler');
+
 var app = express();
 
+//var err = require('error-handler');
 // view engine setup
 //app.set('views', path.join(__dirname, 'views'));
 //app.set('view engine', 'jade');
@@ -26,6 +27,7 @@ app.use(cookieParser());
 //app.use('/users', users);
 
 // catch 404 and forward to error handler
+/*
 app.use(function(req, res, next) {
   var err = new Error('Not Found');
   err.status = 404;
@@ -42,7 +44,7 @@ app.use(function(err, req, res, next) {
   res.status(err.status || 500);
   res.render('error');
 });
-
+*/
 module.exports = app;
 
 /**
@@ -54,8 +56,13 @@ if ('development' == app.get('env')) {
 // This covers serving up the index page
 app.use(express.static(path.join(__dirname, '../client/.tmp')));
 app.use(express.static(path.join(__dirname, '../client/app')));
-//app.use(function(err,req,res,next));
+//app.use(express.errorHandler());
 }
+
+app.use(function(err, req, res, next){
+  console.error(err.stack);
+  res.send(500, 'Something broke!');
+});
 
 /**
  * Production Settings
@@ -63,7 +70,7 @@ app.use(express.static(path.join(__dirname, '../client/app')));
 if('production' == app.get('env')) {
 app.use(express.static(path.join(__dirname, '/dist')));
 }
-// fire server
-var server = app.listen(3000, function(){
-	console.log('Listening on port %d', server.address().port);
+
+var server = app.listen(3000, function() {
+    console.log('Listening on port %d', server.address().port);
 });
