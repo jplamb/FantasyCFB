@@ -9,8 +9,8 @@
  */
  
 angular.module('clientApp')
-  .controller('teamsController', function($scope) {
-    $scope.teamsList = [
+  .controller('teamsController', function() {
+    this.teamsList = [
       {
           name: 'John',
           points: 322

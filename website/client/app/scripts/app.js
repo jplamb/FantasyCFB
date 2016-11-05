@@ -4,7 +4,7 @@
  * @ngdoc overview
  * @name clientApp
  * @description
- * # clientApp
+ * # clientAppnt se
  *
  * Main module of the application.
  */
@@ -17,15 +17,14 @@ angular
     'ngResource',
     'ngRoute',
     'ngSanitize',
-    'ngTouch',
-    'teams'
-  ],)
+    'ngTouch'
+  ])
   .config(function ($routeProvider) {
     $routeProvider
       .when('/', {
         templateUrl: 'views/main.html',
-        controller: ['MainCtrl','teamsController'],
-        controllerAs: ['main','teams']
+        controller: 'MainCtrl',
+        controllerAs: 'main'
       })
       .when('/about', {
         templateUrl: 'views/about.html',
