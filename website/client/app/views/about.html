@@ -1,17 +1,19 @@
-<div>
+<div ng-controller="AboutCtrl">
   
 <!-- <body ng-app="clientApp" ng-controller="AboutCtrl"> -->
-  <p> helksdf {{1+1}}</p>
-  <p>{{$scope.teams}}</p>
+
   <table>
     <thead>
       <tr><th colspan="4">Drivers Championship Standings</th></tr>
     </thead>
     <tbody>
-      <tr ng-repeat="team in teams">
+      <tr ng-repeat="team in teamsList">
         <td>{{$index + 1}}</td>
         <td>
-          hello{{team}}
+          Team:&nbsp{{team.name}}
+        </td>
+        <td>
+          Points:&nbsp{{team.points}}
         </td>
       </tr>
     </tbody>

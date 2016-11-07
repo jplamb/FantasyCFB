@@ -9,5 +9,15 @@
  */
 angular.module('clientApp')
   .controller('AboutCtrl', function ($scope) {
-    $scope.teams = 42;
+    $scope.teamsList = [
+        {
+          name: 'John',
+          points: 42
+        },
+        {
+          name: 'Jack',
+          points: 35
+        }
+
+      ];
   });
