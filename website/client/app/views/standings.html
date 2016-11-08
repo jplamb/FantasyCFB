@@ -1,10 +1,7 @@
-<div ng-controller="AboutCtrl">
-  
-<!-- <body ng-app="clientApp" ng-controller="AboutCtrl"> -->
-
+<div ng-controller="StandingsCtrl">
   <table>
     <thead>
-      <tr><th colspan="4">Drivers Championship Standings</th></tr>
+      <tr><th colspan="4">Fantasy Football League of Superb Champions Standings</th></tr>
     </thead>
     <tbody>
       <th>
@@ -17,7 +14,6 @@
           Points
         </th>
       <tr ng-repeat="team in teamsList">
-
         <td>{{$index + 1}}</td>
         <td>
           {{team.name}}
@@ -28,5 +24,4 @@
       </tr>
     </tbody>
   </table>
-<!--</body>-->
 </div>
