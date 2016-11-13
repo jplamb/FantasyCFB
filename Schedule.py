@@ -12,6 +12,8 @@ import requests
 import re
 from dateutil.parser import parse
 from datetime import date, timedelta, datetime
+from unidecode import unidecode
+
 
 class Schedule:
 	
@@ -99,7 +101,7 @@ class Schedule:
 		values = {}
 		values['team'] = self.team
 		values['gm_date'] = date
-		values['opp'] = opp
+		values['opp'] = ''.join([unidecode(x) for x in opp])
 		values['status'] = status
 		values['power_five'] = opp_power_five
 		values['win_loss'] = victory
