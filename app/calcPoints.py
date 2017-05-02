@@ -1,6 +1,8 @@
 # Calculate player points
-from dbConn import Mysql
 import os
+
+from app.dbConn import Mysql
+
 
 # Main method
 def calc_all_player_points(week):

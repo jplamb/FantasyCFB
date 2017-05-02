@@ -23,7 +23,7 @@ class Mysql(object):
             cls.__instance = super(Mysql, cls).__new__(cls, *args, **kwargs)
         return cls.__instance
 
-    def __init__(self, host = 'localhost', user='appuser', password=base64.b64decode('YXBwdXNlcg=='), database='ffbdev', dict = False):
+    def __init__(self, host = 'db', user='demoUser', password='demoPass', database='demoDb', dict = False):
         self.__host = host
         self.__user = user
         self.__password = password

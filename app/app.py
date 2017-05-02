@@ -5,21 +5,23 @@
 #  www.themanualoverride.com
 #################################################
 
-from getPlayers import get_power_five_roster_links, get_team_roster, print_players
-from updateStats import update_stats
-from Schedule import *
-from getPlayerStats import get_player_stats
-import Player
+import base64
 import datetime
-from dbConn import Mysql
-from teams import record_team
-import Roster
-from calcPoints import calc_all_player_points, calc_team_def_points, post_team_points
+from multiprocessing.dummy import Pool
+
 import grequests
 import requests
-from multiprocessing.dummy import Pool
-import base64
+
+import Player
+import Roster
 import settings
+from Schedule import *
+from calcPoints import calc_all_player_points, calc_team_def_points, post_team_points
+from dbConn import Mysql
+from getPlayerStats import get_player_stats
+from getPlayers import get_power_five_roster_links, get_team_roster, print_players
+from teams import record_team
+from updateStats import update_stats
 
 players = {}
 REQUESTS_SIZE = 100
