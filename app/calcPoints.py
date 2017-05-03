@@ -1,7 +1,7 @@
 # Calculate player points
 import os
 
-from app.dbConn import Mysql
+from dbConn import Mysql
 
 
 # Main method

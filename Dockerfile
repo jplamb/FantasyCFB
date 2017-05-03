@@ -5,7 +5,7 @@ FROM python:2.7-slim
 WORKDIR /app
 
 # Copy the current directory contents into the container at /app
-ADD . /app
+COPY . /app
 
 RUN apt-get update && apt-get install -y libmysqlclient-dev gcc
 
@@ -19,4 +19,4 @@ EXPOSE 80
 #ENV NAME World
 
 # Run app.py when the container launches
-CMD ["python", "app.py"]
+CMD ["python", "app/app.py"]

@@ -48,7 +48,7 @@ def run_console(actions):
 			print 'That\'s not a valid number, try again'
 		else:
 			print 'Executing now..'
-			print datetime.datetime.now().time()
+			print datetime.now().time()
 			break
 		
 	return action
@@ -256,7 +256,7 @@ action_choice = ['Retrieve players',
 				 'Print players',
 				 'Update Rosters',
 				 'Calculate Points']
-print datetime.datetime.now().time()
+print datetime.now().time()
 
 # run console
 #test_mode = run_test()
@@ -264,7 +264,7 @@ command = run_console(action_choice)
 perform_action(command)
 
 print 'Closing..'
-print datetime.datetime.now().time()
+print datetime.now().time()
 
 
 
